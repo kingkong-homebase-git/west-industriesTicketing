@@ -1,0 +1,340 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import { format } from "date-fns";
+import { updateTicket, createTicket } from "@/actions/tickets";
+import { toast } from "sonner";
+import * as Select from "@radix-ui/react-select";
+import * as Popover from "@radix-ui/react-popover";
+import { Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
+
+interface TicketFormProps {
+  ticket: any;
+  isCreateMode: boolean;
+  role: string;
+  userId: string;
+  allUsers: any[];
+  onClose: () => void;
+  onTicketCreated?: (id: string) => void;
+}
+
+export default function TicketForm({
+  ticket,
+  isCreateMode,
+  role,
+  userId,
+  allUsers,
+  onClose,
+  onTicketCreated,
+}: TicketFormProps) {
+  const [title, setTitle] = useState(ticket?.title || "");
+  const [description, setDescription] = useState(ticket?.description || "");
+  const [status, setStatus] = useState(ticket?.status || "open");
+  const [priority, setPriority] = useState(ticket?.priority || "medium");
+  const [assigneeId, setAssigneeId] = useState(ticket?.assigneeId || "none");
+  const [deadline, setDeadline] = useState<Date | null>(
+    ticket?.deadline ? new Date(ticket?.deadline) : null
+  );
+
+  const [isEditingDesc, setIsEditingDesc] = useState(isCreateMode);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  const isSuperUser = role === "super_user";
+  const isAssignee = ticket?.assigneeId === userId;
+
+  const canEditFields = isSuperUser || isCreateMode;
+
+  const triggerSave = async (updates: any) => {
+    if (isCreateMode) return; // create mode saves explicitly
+    if (!isSuperUser) return; // team_member cant edit fields generally
+    
+    setIsSaving(true);
+    try {
+      await updateTicket(ticket.id, updates);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const newTicket = await createTicket({
+        title,
+        description,
+        priority,
+        status,
+        assigneeId: assigneeId === "none" ? null : assigneeId,
+        deadline: deadline ? deadline.toISOString() : null,
+      });
+      toast.success("Ticket created");
+      onTicketCreated?.(newTicket.id);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create ticket");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Title */}
+      <div>
+        {canEditFields ? (
+          <input
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+              saveTimeoutRef.current = setTimeout(() => {
+                if (e.target.value.trim()) triggerSave({ title: e.target.value });
+              }, 600);
+            }}
+            placeholder="Ticket title..."
+            className="w-full text-xl font-bold bg-transparent border-none outline-none focus:ring-0 placeholder-text-secondary/50 text-text-primary"
+          />
+        ) : (
+          <h2 className="text-xl font-bold text-text-primary">{title}</h2>
+        )}
+      </div>
+
+      {/* Meta Grid */}
+      <div className="grid grid-cols-2 gap-4 border-y border-border py-4">
+        {/* Status */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">Status</label>
+          <Select.Root
+            value={status}
+            onValueChange={(val) => {
+              setStatus(val);
+              triggerSave({ status: val });
+            }}
+            disabled={!isSuperUser && !(isAssignee && status === "in_progress")}
+          >
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+              <Select.Value />
+              <Select.Icon>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+                <Select.Viewport className="p-1">
+                  {["open", "in_progress", "review", "done", "closed"].map((s) => {
+                    // Team member can only move from in_progress to review
+                    if (!isSuperUser && s !== "review") return null;
+                    if (!isSuperUser && status !== "in_progress") return null;
+
+                    return (
+                      <Select.Item
+                        key={s}
+                        value={s}
+                        className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
+                      >
+                        <Select.ItemText className="capitalize">{s.replace("_", " ")}</Select.ItemText>
+                        <Select.ItemIndicator className="absolute left-1.5">
+                          <Check size={14} />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    );
+                  })}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
+        {/* Priority */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">Priority</label>
+          <Select.Root
+            value={priority}
+            onValueChange={(val) => {
+              setPriority(val);
+              triggerSave({ priority: val });
+            }}
+            disabled={!canEditFields}
+          >
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+              <Select.Value />
+              <Select.Icon>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+                <Select.Viewport className="p-1">
+                  {["low", "medium", "high"].map((p) => (
+                    <Select.Item
+                      key={p}
+                      value={p}
+                      className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
+                    >
+                      <Select.ItemText className="capitalize">{p}</Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-1.5">
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
+        {/* Assignee */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">Assignee</label>
+          <Select.Root
+            value={assigneeId}
+            onValueChange={(val) => {
+              setAssigneeId(val);
+              triggerSave({ assigneeId: val === "none" ? null : val });
+            }}
+            disabled={!canEditFields}
+          >
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+              <Select.Value />
+              <Select.Icon>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+                <Select.Viewport className="p-1">
+                  <Select.Item value="none" className="flex items-center px-6 py-1.5 text-sm text-text-secondary hover:bg-accent/20 rounded cursor-pointer outline-none">
+                    <Select.ItemText>Unassigned</Select.ItemText>
+                  </Select.Item>
+                  {allUsers.map((u) => (
+                    <Select.Item
+                      key={u.id}
+                      value={u.id}
+                      className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none"
+                    >
+                      <Select.ItemText>{u.name}</Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-1.5">
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
+        {/* Deadline */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">Deadline</label>
+          {canEditFields ? (
+            <Popover.Root>
+              <Popover.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors">
+                <span className={!deadline ? "text-text-secondary" : "text-text-primary"}>
+                  {deadline ? format(deadline, "PPP") : "Set date"}
+                </span>
+                <CalendarIcon size={14} className="text-text-secondary" />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content className="bg-surface-2 border border-border p-3 rounded-md shadow-xl z-[60] mt-1 w-64">
+                  <input
+                    type="date"
+                    className="w-full bg-surface border border-border text-text-primary rounded-md px-3 py-1.5 outline-none focus:border-accent"
+                    onChange={(e) => {
+                      if (!e.target.value) {
+                        setDeadline(null);
+                        triggerSave({ deadline: null });
+                      } else {
+                        const d = new Date(e.target.value);
+                        setDeadline(d);
+                        triggerSave({ deadline: d.toISOString() });
+                      }
+                    }}
+                  />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          ) : (
+            <div className="text-sm px-3 py-1.5 text-text-primary">
+              {deadline ? format(deadline, "PPP") : "None"}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-semibold text-text-primary">Description</label>
+          {canEditFields && !isCreateMode && (
+            <button
+              onClick={() => setIsEditingDesc(!isEditingDesc)}
+              className="text-xs text-accent hover:underline"
+            >
+              {isEditingDesc ? "Preview" : "Edit"}
+            </button>
+          )}
+        </div>
+
+        {isEditingDesc ? (
+          <div data-color-mode="dark" className="border border-border rounded-md overflow-hidden">
+            <MDEditor
+              value={description}
+              onChange={(val) => {
+                setDescription(val || "");
+                if (!isCreateMode && canEditFields) {
+                  if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                  saveTimeoutRef.current = setTimeout(() => {
+                    triggerSave({ description: val || "" });
+                  }, 1000);
+                }
+              }}
+              preview="edit"
+              height={200}
+              className="!bg-surface-2"
+            />
+          </div>
+        ) : (
+          <div className="prose prose-invert prose-sm max-w-none bg-surface-2 border border-border p-4 rounded-md min-h-[100px]">
+            {description ? (
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{description}</ReactMarkdown>
+            ) : (
+              <p className="text-text-secondary italic">No description provided.</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Create Button */}
+      {isCreateMode && (
+        <div className="pt-4 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={isSaving}
+            className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {isSaving ? "Creating..." : "Create Ticket"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,160 @@
+import {
+  pgTable,
+  pgEnum,
+  uuid,
+  text,
+  boolean,
+  integer,
+  timestamp,
+  index,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+export const userRoleEnum = pgEnum("user_role", ["super_user", "team_member"]);
+export const ticketStatusEnum = pgEnum("ticket_status", [
+  "open",
+  "in_progress",
+  "review",
+  "done",
+  "closed",
+]);
+export const ticketPriorityEnum = pgEnum("ticket_priority", [
+  "low",
+  "medium",
+  "high",
+]);
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").unique().notNull(),
+  passwordHash: text("password_hash").notNull(),
+  name: text("name").notNull(),
+  role: userRoleEnum("role").notNull().default("team_member"),
+  isArchived: boolean("is_archived").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ─── Tickets ──────────────────────────────────────────────────────────────────
+// Note: creator_id is nullable in DB so ON DELETE SET NULL works correctly.
+// The application layer (Zod + server actions) enforces it is always provided on create.
+export const tickets = pgTable(
+  "tickets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: ticketStatusEnum("status").notNull().default("open"),
+    priority: ticketPriorityEnum("priority").notNull().default("medium"),
+    assigneeId: uuid("assignee_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    creatorId: uuid("creator_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    deadline: timestamp("deadline", { withTimezone: true }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("tickets_status_idx").on(t.status),
+    index("tickets_assignee_idx").on(t.assigneeId),
+    index("tickets_status_sort_idx").on(t.status, t.sortOrder),
+  ]
+);
+
+// ─── Checklist Items ──────────────────────────────────────────────────────────
+export const checklistItems = pgTable(
+  "checklist_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ticketId: uuid("ticket_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    isDone: boolean("is_done").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [index("checklist_ticket_idx").on(t.ticketId)]
+);
+
+// ─── Comments ─────────────────────────────────────────────────────────────────
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ticketId: uuid("ticket_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("comments_ticket_idx").on(t.ticketId)]
+);
+
+// ─── Relations ────────────────────────────────────────────────────────────────
+export const usersRelations = relations(users, ({ many }) => ({
+  assignedTickets: many(tickets, { relationName: "assignee" }),
+  createdTickets: many(tickets, { relationName: "creator" }),
+  comments: many(comments),
+}));
+
+export const ticketsRelations = relations(tickets, ({ one, many }) => ({
+  assignee: one(users, {
+    fields: [tickets.assigneeId],
+    references: [users.id],
+    relationName: "assignee",
+  }),
+  creator: one(users, {
+    fields: [tickets.creatorId],
+    references: [users.id],
+    relationName: "creator",
+  }),
+  checklistItems: many(checklistItems),
+  comments: many(comments),
+}));
+
+export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [checklistItems.ticketId],
+    references: [tickets.id],
+  }),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [comments.ticketId],
+    references: [tickets.id],
+  }),
+  author: one(users, {
+    fields: [comments.authorId],
+    references: [users.id],
+  }),
+}));
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Ticket = typeof tickets.$inferSelect;
+export type NewTicket = typeof tickets.$inferInsert;
+export type ChecklistItem = typeof checklistItems.$inferSelect;
+export type Comment = typeof comments.$inferSelect;
+export type UserRole = "super_user" | "team_member";
+export type TicketStatus = "open" | "in_progress" | "review" | "done" | "closed";
+export type TicketPriority = "low" | "medium" | "high";
