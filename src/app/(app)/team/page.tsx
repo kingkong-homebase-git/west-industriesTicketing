@@ -23,7 +23,7 @@ export default async function TeamPage() {
         </p>
       </div>
 
-      <div className="flex-1 overflow-hidden bg-surface rounded-xl border border-border shadow-sm flex flex-col">
+      <div className="flex-1 overflow-hidden bg-surface/30 backdrop-blur-md rounded-2xl border border-border/60 shadow-xl flex flex-col hover:border-accent/20 transition-all duration-300">
         <TeamTable initialUsers={allUsers} />
       </div>
     </div>

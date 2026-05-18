@@ -18,28 +18,28 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar role={user.role} />
-      <div className="relative flex flex-col flex-1 min-w-0">
-        {/* Background Image with Premium Atmospheric Glassmorphism Overlay */}
-        <div 
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            backgroundImage: "url('/mountiankanban.jpeg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            opacity: 0.15,
-          }}
-        />
-        <div 
-          className="absolute inset-0 z-0 backdrop-blur-[3px] pointer-events-none" 
-          style={{
-            backgroundColor: "rgba(5, 7, 13, 0.85)"
-          }}
-        />
-        
-        <div className="relative z-10 flex flex-col flex-1 h-full">
+    <div className="relative flex h-screen overflow-hidden bg-background">
+      {/* Background Image with Premium Atmospheric Glassmorphism Overlay */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: "url('/mountiankanban.jpeg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          opacity: 0.40,
+        }}
+      />
+      <div 
+        className="absolute inset-0 z-0 backdrop-blur-[1px] pointer-events-none" 
+        style={{
+          backgroundColor: "rgba(5, 7, 13, 0.55)"
+        }}
+      />
+      
+      <div className="relative z-10 flex h-full w-full overflow-hidden">
+        <Sidebar role={user.role} />
+        <div className="relative flex flex-col flex-1 min-w-0">
           <Header user={user} />
           <main className="flex-1 overflow-auto p-6">{children}</main>
         </div>

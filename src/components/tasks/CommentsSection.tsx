@@ -57,8 +57,8 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
         ) : (
           comments.map((comment, i) => (
             <div key={comment.id || i} className="flex gap-3">
-              <Avatar.Root className="w-8 h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center shrink-0">
-                <Avatar.Fallback className="text-xs font-medium text-text-secondary">
+              <Avatar.Root className="w-8 h-8 rounded-full bg-surface/30 border border-border flex items-center justify-center shrink-0">
+                <Avatar.Fallback className="text-xs font-semibold text-text-secondary">
                   {getInitials(comment.authorName || "?")}
                 </Avatar.Fallback>
               </Avatar.Root>
@@ -71,7 +71,7 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
                     {relativeTime(comment.createdAt)}
                   </span>
                 </div>
-                <div className="text-sm text-text-secondary whitespace-pre-wrap break-words bg-surface-2 p-3 rounded-md border border-border/50">
+                <div className="text-sm text-text-secondary whitespace-pre-wrap break-words bg-surface/20 backdrop-blur-sm p-3 rounded-xl border border-border/40">
                   {comment.body}
                 </div>
               </div>
@@ -86,7 +86,7 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write a comment..."
-          className="w-full bg-surface-2 border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent transition-colors min-h-[80px] resize-none pr-12"
+          className="w-full bg-surface/20 backdrop-blur-sm border border-border/60 rounded-xl px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/40 hover:bg-surface/30 focus:bg-surface/30 focus:outline-none focus:border-accent transition-all min-h-[80px] resize-none pr-12"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -97,7 +97,7 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
         <button
           type="submit"
           disabled={!body.trim() || isSubmitting}
-          className="absolute bottom-4 right-3 w-8 h-8 rounded bg-accent text-white flex items-center justify-center hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute bottom-4 right-3 w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(59,130,246,0.3)]"
         >
           <Send size={14} />
         </button>

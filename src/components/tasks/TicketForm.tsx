@@ -124,14 +124,14 @@ export default function TicketForm({
             }}
             disabled={!isSuperUser && !(isAssignee && status === "in_progress")}
           >
-            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />
               <Select.Icon>
                 <ChevronDown size={14} />
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+              <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
                 <Select.Viewport className="p-1">
                   {["open", "in_progress", "review", "done", "closed"].map((s) => {
                     // Team member can only move from in_progress to review
@@ -168,14 +168,14 @@ export default function TicketForm({
             }}
             disabled={!canEditFields}
           >
-            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />
               <Select.Icon>
                 <ChevronDown size={14} />
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+              <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
                 <Select.Viewport className="p-1">
                   {["low", "medium", "high"].map((p) => (
                     <Select.Item
@@ -206,14 +206,14 @@ export default function TicketForm({
             }}
             disabled={!canEditFields}
           >
-            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors disabled:opacity-50">
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />
               <Select.Icon>
                 <ChevronDown size={14} />
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+              <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
                 <Select.Viewport className="p-1">
                   <Select.Item value="none" className="flex items-center px-6 py-1.5 text-sm text-text-secondary hover:bg-accent/20 rounded cursor-pointer outline-none">
                     <Select.ItemText>Unassigned</Select.ItemText>
@@ -241,14 +241,14 @@ export default function TicketForm({
           <label className="text-xs text-text-secondary font-medium">Deadline</label>
           {canEditFields ? (
             <Popover.Root>
-              <Popover.Trigger className="flex items-center justify-between w-full text-sm bg-surface-2 border border-border px-3 py-1.5 rounded-md hover:border-accent transition-colors">
+              <Popover.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all">
                 <span className={!deadline ? "text-text-secondary" : "text-text-primary"}>
                   {deadline ? format(deadline, "PPP") : "Set date"}
                 </span>
                 <CalendarIcon size={14} className="text-text-secondary" />
               </Popover.Trigger>
               <Popover.Portal>
-                <Popover.Content className="bg-surface-2 border border-border p-3 rounded-md shadow-xl z-[60] mt-1 w-64">
+                <Popover.Content className="bg-surface/95 backdrop-blur-xl border border-border/80 p-3 rounded-xl shadow-2xl z-[60] mt-1 w-64">
                   <input
                     type="date"
                     className="w-full bg-surface border border-border text-text-primary rounded-md px-3 py-1.5 outline-none focus:border-accent"
@@ -303,11 +303,11 @@ export default function TicketForm({
               }}
               preview="edit"
               height={200}
-              className="!bg-surface-2"
+              className="!bg-surface/60"
             />
           </div>
         ) : (
-          <div className="prose prose-invert prose-sm max-w-none bg-surface-2 border border-border p-4 rounded-md min-h-[100px]">
+          <div className="prose prose-invert prose-sm max-w-none bg-surface/10 backdrop-blur-md border border-border/40 p-4 rounded-xl min-h-[100px]">
             {description ? (
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{description}</ReactMarkdown>
             ) : (

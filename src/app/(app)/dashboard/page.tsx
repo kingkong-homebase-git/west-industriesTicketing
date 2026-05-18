@@ -3,7 +3,7 @@ export default function DashboardPage() {
     <div className="flex items-center justify-center h-full">
       <div
         className="rounded-2xl border p-12 text-center max-w-md"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        style={{ background: "rgba(14, 19, 32, 0.45)", backdropFilter: "blur(12px)", borderColor: "var(--border)" }}
       >
         <div className="text-4xl mb-4">🚀</div>
         <h1 className="text-xl font-semibold text-text-primary mb-2">

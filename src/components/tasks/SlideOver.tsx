@@ -72,13 +72,13 @@ export default function SlideOver({
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" />
         <Dialog.Content
           className={cn(
-            "fixed right-0 top-0 h-full w-full max-w-xl bg-surface border-l border-border shadow-2xl z-50 flex flex-col focus:outline-none transition-transform duration-300",
+            "fixed right-0 top-0 h-full w-full max-w-xl bg-surface/60 backdrop-blur-2xl border-l border-border shadow-2xl z-50 flex flex-col focus:outline-none transition-transform duration-300",
             isOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
           {showConfirmClose && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="bg-surface border border-border p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+              <div className="bg-surface/85 backdrop-blur-md border border-border p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
                 <h3 className="text-lg font-semibold text-text-primary mb-2">Close Ticket</h3>
                 <p className="text-sm text-text-secondary mb-6">
                   Are you sure you want to close this ticket? It will be moved to the closed list.
@@ -149,7 +149,7 @@ export default function SlideOver({
           </div>
 
           {!isCreateMode && role === "super_user" && data?.ticket?.status !== "closed" && (
-            <div className="p-4 border-t border-border shrink-0 bg-surface-2/50">
+            <div className="p-4 border-t border-border shrink-0 bg-surface-2/20 backdrop-blur-md">
               <button
                 onClick={() => setShowConfirmClose(true)}
                 className="w-full py-2.5 rounded-lg border border-danger/30 text-danger font-medium hover:bg-danger/10 transition-colors"

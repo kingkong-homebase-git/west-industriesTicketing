@@ -19,8 +19,8 @@ export default function KanbanColumn({ id, title, tickets, onCardClick }: Kanban
   });
 
   return (
-    <div className="flex flex-col flex-1 min-w-[280px] max-w-[320px] bg-surface/30 backdrop-blur-md rounded-2xl overflow-hidden border border-border hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
-      <div className="p-3.5 border-b border-border flex items-center justify-between bg-surface-2/20">
+    <div className="flex flex-col flex-1 min-w-[280px] max-w-[320px] bg-surface/10 backdrop-blur-md rounded-2xl overflow-hidden border border-border/60 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+      <div className="p-3.5 border-b border-border/40 flex items-center justify-between bg-white/2">
         <h3 className="font-semibold text-sm text-text-primary tracking-wide">{title}</h3>
         <span className="text-xs font-semibold bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20">
           {tickets.length}

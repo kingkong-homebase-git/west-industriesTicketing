@@ -57,7 +57,7 @@ export default function InviteUserDialog({ onUserAdded }: InviteUserDialogProps)
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-border shadow-2xl rounded-xl z-50 flex flex-col focus:outline-none">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface/80 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl z-50 flex flex-col focus:outline-none">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Dialog.Title className="text-lg font-semibold text-text-primary">
               Invite Team Member
@@ -74,7 +74,7 @@ export default function InviteUserDialog({ onUserAdded }: InviteUserDialogProps)
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="John Doe"
-                className="w-full bg-surface-2 border border-border text-text-primary rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-surface/20 backdrop-blur-sm border border-border/60 text-text-primary rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent hover:bg-surface/30 focus:bg-surface/30 transition-all"
               />
             </div>
             
@@ -85,7 +85,7 @@ export default function InviteUserDialog({ onUserAdded }: InviteUserDialogProps)
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="john@example.com"
-                className="w-full bg-surface-2 border border-border text-text-primary rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-surface/20 backdrop-blur-sm border border-border/60 text-text-primary rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent hover:bg-surface/30 focus:bg-surface/30 transition-all"
               />
             </div>
 
@@ -96,7 +96,7 @@ export default function InviteUserDialog({ onUserAdded }: InviteUserDialogProps)
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Must be at least 8 characters"
-                className="w-full bg-surface-2 border border-border text-text-primary rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent"
+                className="w-full bg-surface/20 backdrop-blur-sm border border-border/60 text-text-primary rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent hover:bg-surface/30 focus:bg-surface/30 transition-all"
               />
             </div>
 
@@ -106,14 +106,14 @@ export default function InviteUserDialog({ onUserAdded }: InviteUserDialogProps)
                 value={formData.role}
                 onValueChange={(val: any) => setFormData({ ...formData, role: val })}
               >
-                <Select.Trigger className="flex items-center justify-between w-full bg-surface-2 border border-border text-text-primary rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent">
+                <Select.Trigger className="flex items-center justify-between w-full bg-surface/20 backdrop-blur-sm border border-border/60 text-text-primary rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent hover:bg-surface/30 focus:bg-surface/30 transition-all">
                   <Select.Value />
                   <Select.Icon>
                     <ChevronDown size={16} className="text-text-secondary" />
                   </Select.Icon>
                 </Select.Trigger>
                 <Select.Portal>
-                  <Select.Content className="bg-surface-2 border border-border rounded-md shadow-xl overflow-hidden z-[60]">
+                  <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
                     <Select.Viewport className="p-1">
                       <Select.Item value="team_member" className="flex items-center px-6 py-2 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none">
                         <Select.ItemText>Team Member</Select.ItemText>

@@ -30,7 +30,7 @@ export default function TeamTable({ initialUsers }: TeamTableProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border flex justify-between items-center bg-surface-2/30">
+      <div className="p-4 border-b border-border/40 flex justify-between items-center bg-white/2">
         <div className="text-sm text-text-secondary">
           {users.length} total members
         </div>
@@ -39,7 +39,7 @@ export default function TeamTable({ initialUsers }: TeamTableProps) {
 
       <div className="flex-1 overflow-auto">
         <table className="w-full text-left text-sm border-collapse">
-          <thead className="bg-surface-2/50 sticky top-0 z-10">
+          <thead className="bg-white/5 sticky top-0 z-10">
             <tr>
               <th className="px-6 py-3 font-medium text-text-secondary border-b border-border">Name</th>
               <th className="px-6 py-3 font-medium text-text-secondary border-b border-border">Email</th>
@@ -53,8 +53,8 @@ export default function TeamTable({ initialUsers }: TeamTableProps) {
               <tr
                 key={user.id}
                 className={cn(
-                  "hover:bg-surface-2/30 transition-colors",
-                  user.isArchived && "opacity-60 bg-surface-2/10"
+                  "hover:bg-white/5 transition-colors duration-200",
+                  user.isArchived && "opacity-60 bg-white/2"
                 )}
               >
                 <td className="px-6 py-4 font-medium text-text-primary">
@@ -66,7 +66,7 @@ export default function TeamTable({ initialUsers }: TeamTableProps) {
                 <td className="px-6 py-4">
                   <span className={cn(
                     "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                    user.role === "super_user" ? "bg-accent/10 text-accent" : "bg-surface-2 text-text-secondary"
+                    user.role === "super_user" ? "bg-accent/10 text-accent border border-accent/20" : "bg-surface/20 text-text-secondary border border-border/40"
                   )}>
                     {user.role === "super_user" ? "Super User" : "Team Member"}
                   </span>

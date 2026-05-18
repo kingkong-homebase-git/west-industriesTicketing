@@ -13,7 +13,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col border-r bg-surface border-border">
+    <aside className="w-64 shrink-0 flex flex-col border-r bg-surface/30 backdrop-blur-xl border-border">
       <div className="h-16 flex items-center px-6 border-b border-border bg-surface-2/10">
         <div className="flex items-center gap-2.5 text-text-primary font-bold text-lg tracking-tight">
           <Layers className="text-accent filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" size={20} />

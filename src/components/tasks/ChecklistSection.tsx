@@ -50,8 +50,8 @@ function SortableItem({ item, isSuperUser, onToggle, onDelete }: ChecklistItemPr
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-3 p-2 rounded-md hover:bg-surface-2 transition-colors group",
-        isDragging && "opacity-50 bg-surface-2 ring-1 ring-accent z-10"
+        "flex items-center gap-3 p-2 rounded-md hover:bg-white/5 transition-colors group",
+        isDragging && "opacity-50 bg-white/5 ring-1 ring-accent z-10"
       )}
     >
       {isSuperUser && (
@@ -67,7 +67,7 @@ function SortableItem({ item, isSuperUser, onToggle, onDelete }: ChecklistItemPr
       <Checkbox.Root
         checked={item.isDone}
         onCheckedChange={(checked) => onToggle(item.id, checked === true)}
-        className="w-4 h-4 shrink-0 rounded border border-border flex items-center justify-center bg-surface data-[state=checked]:bg-accent data-[state=checked]:border-accent transition-colors outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-surface"
+        className="w-4 h-4 shrink-0 rounded border border-border/80 flex items-center justify-center bg-surface/10 data-[state=checked]:bg-accent data-[state=checked]:border-accent transition-colors outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-surface"
       >
         <Checkbox.Indicator>
           <Check size={12} className="text-white" />
@@ -189,9 +189,9 @@ export default function ChecklistSection({
       </div>
 
       {items.length > 0 && (
-        <div className="w-full bg-surface-2 h-1.5 rounded-full overflow-hidden">
+        <div className="w-full bg-surface/20 h-1.5 rounded-full overflow-hidden">
           <div
-            className="bg-accent h-full transition-all duration-300"
+            className="bg-accent h-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -221,7 +221,7 @@ export default function ChecklistSection({
           onKeyDown={handleAdd}
           disabled={isAdding}
           placeholder="Add an item... (press Enter)"
-          className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
+          className="w-full bg-surface/20 backdrop-blur-sm border border-border/60 rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/40 hover:bg-surface/30 focus:bg-surface/30 focus:outline-none focus:border-accent transition-all disabled:opacity-50"
         />
       </div>
     </div>
