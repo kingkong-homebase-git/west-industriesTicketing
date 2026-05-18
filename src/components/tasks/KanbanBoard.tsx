@@ -181,10 +181,61 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
     }
   }
 
+  const totalTasks = tickets.length;
+  const inProgressTasks = tickets.filter(t => t.status === "in_progress").length;
+  const completedTasks = tickets.filter(t => t.status === "done" || t.status === "closed").length;
+  const overdueTasks = tickets.filter(t => {
+    if (t.status === "done" || t.status === "closed") return false;
+    if (!t.deadline) return false;
+    return new Date(t.deadline) < new Date();
+  }).length;
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Tasks</h1>
+    <div className="h-full flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Total Tasks */}
+        <div className="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-text-primary">Total Task</span>
+            <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-1 rounded-full">All</span>
+          </div>
+          <div className="text-3xl font-bold text-text-primary">{totalTasks}</div>
+          <div className="text-xs text-text-secondary">Current active tickets</div>
+        </div>
+
+        {/* Overdue */}
+        <div className="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-text-primary">Overdue Task</span>
+            <span className="text-xs font-medium bg-danger/20 text-danger px-2 py-1 rounded-full">Late</span>
+          </div>
+          <div className="text-3xl font-bold text-text-primary">{overdueTasks}</div>
+          <div className="text-xs text-text-secondary">Past deadline</div>
+        </div>
+
+        {/* In Progress */}
+        <div className="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-text-primary">In Progress</span>
+            <span className="text-xs font-medium bg-warning/20 text-warning px-2 py-1 rounded-full">Active</span>
+          </div>
+          <div className="text-3xl font-bold text-text-primary">{inProgressTasks}</div>
+          <div className="text-xs text-text-secondary">Being worked on</div>
+        </div>
+
+        {/* Completed */}
+        <div className="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-text-primary">Completed</span>
+            <span className="text-xs font-medium bg-success/20 text-success px-2 py-1 rounded-full">Done</span>
+          </div>
+          <div className="text-3xl font-bold text-text-primary">{completedTasks}</div>
+          <div className="text-xs text-text-secondary">Successfully finished</div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-text-primary">Board View</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-secondary">Show Closed</span>
           <button

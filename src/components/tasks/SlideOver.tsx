@@ -30,6 +30,8 @@ export default function SlideOver({
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
   useEffect(() => {
     if (isOpen && ticketId && !isCreateMode) {
       setLoading(true);
@@ -41,24 +43,17 @@ export default function SlideOver({
         })
         .finally(() => setLoading(false));
     } else if (isOpen && isCreateMode) {
-      // Fetch users for assignee dropdown when creating
-      getTicketDetail("00000000-0000-0000-0000-000000000000").catch((err) => {
-        // Expected to fail on ticket, but we just need allUsers.
-        // Actually, let's just make a separate getUsers action call here if needed,
-        // or we can use the getUsers action directly.
-      });
-      // Better approach: Let's fetch just users for create mode
       import("@/actions/users").then(({ getUsers }) => {
         getUsers().then((users) => setData({ allUsers: users, ticket: null, checklist: [], comments: [] }));
       });
     } else {
       setData(null);
+      setShowConfirmClose(false);
     }
   }, [isOpen, ticketId, isCreateMode, onClose]);
 
   const handleCloseTicket = async () => {
     if (!ticketId) return;
-    if (!window.confirm("Are you sure you want to close this ticket?")) return;
 
     try {
       await updateTicketStatus(ticketId, { status: "closed", sortOrder: 0 });
@@ -66,6 +61,8 @@ export default function SlideOver({
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to close ticket");
+    } finally {
+      setShowConfirmClose(false);
     }
   };
 
@@ -79,6 +76,31 @@ export default function SlideOver({
             isOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
+          {showConfirmClose && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-surface border border-border p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">Close Ticket</h3>
+                <p className="text-sm text-text-secondary mb-6">
+                  Are you sure you want to close this ticket? It will be moved to the closed list.
+                </p>
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowConfirmClose(false)}
+                    className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCloseTicket}
+                    className="px-4 py-2 bg-danger text-white rounded-lg text-sm font-medium hover:bg-danger/90 transition-colors"
+                  >
+                    Yes, Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
             <Dialog.Title className="text-lg font-semibold text-text-primary">
               {isCreateMode ? "New Ticket" : "Ticket Details"}
@@ -129,7 +151,7 @@ export default function SlideOver({
           {!isCreateMode && role === "super_user" && data?.ticket?.status !== "closed" && (
             <div className="p-4 border-t border-border shrink-0 bg-surface-2/50">
               <button
-                onClick={handleCloseTicket}
+                onClick={() => setShowConfirmClose(true)}
                 className="w-full py-2.5 rounded-lg border border-danger/30 text-danger font-medium hover:bg-danger/10 transition-colors"
               >
                 Close Ticket
