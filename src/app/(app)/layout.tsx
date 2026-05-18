@@ -18,11 +18,25 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar role={user.role} />
-      <div className="flex flex-col flex-1 min-w-0">
-        <Header user={user} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+      <div className="relative flex flex-col flex-1 min-w-0">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 z-0 opacity-40 pointer-events-none"
+          style={{
+            backgroundImage: "url('/mountiankanban.jpeg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="absolute inset-0 z-0 bg-background/85 backdrop-blur-[2px] pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col flex-1 h-full">
+          <Header user={user} />
+          <main className="flex-1 overflow-auto p-6">{children}</main>
+        </div>
       </div>
     </div>
   );

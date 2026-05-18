@@ -29,7 +29,7 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: "open", title: "Open" },
+  { id: "open", title: "To Do" },
   { id: "in_progress", title: "In Progress" },
   { id: "review", title: "Review" },
   { id: "done", title: "Done" },
@@ -235,7 +235,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-text-primary">Board View</h2>
+        <h2 className="text-xl font-bold text-text-primary">My Tasks</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-secondary">Show Closed</span>
           <button

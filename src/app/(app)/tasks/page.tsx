@@ -11,18 +11,7 @@ export default async function TasksPage() {
   const role = ((session?.user as any)?.role as string) ?? "team_member";
   const userId = session?.user?.id ?? "";
 
-  // Fetch all non-closed tickets with assignee info
-  const rows = await db
-    .select({
-      ticket: tickets,
-      assigneeName: users.name,
-    })
-    .from(tickets)
-    .leftJoin(users, eq(tickets.assigneeId, users.id))
-    .where(eq(tickets.status, "open"))
-    .orderBy(asc(tickets.sortOrder), asc(tickets.createdAt));
-
-  // Fetch all tickets (all statuses) for full board
+  // Fetch all tickets (all statuses) for full board, but ONLY for the logged-in user
   const allRows = await db
     .select({
       ticket: tickets,
@@ -30,6 +19,7 @@ export default async function TasksPage() {
     })
     .from(tickets)
     .leftJoin(users, eq(tickets.assigneeId, users.id))
+    .where(eq(tickets.assigneeId, userId))
     .orderBy(asc(tickets.sortOrder), asc(tickets.createdAt));
 
   // Count checklist per ticket
