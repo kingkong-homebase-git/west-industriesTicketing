@@ -7,6 +7,7 @@ export default auth((req) => {
 
   const isPublic =
     nextUrl.pathname.startsWith("/login") ||
+    nextUrl.pathname.startsWith("/accept-invite") ||
     nextUrl.pathname.startsWith("/api/auth");
 
   if (isPublic) return NextResponse.next();
@@ -15,10 +16,12 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  // Team page: super_user only
+  // Team page: super_user or admin only
+  const role = (session?.user as any)?.role;
   if (
     nextUrl.pathname.startsWith("/team") &&
-    (session?.user as any)?.role !== "super_user"
+    role !== "super_user" &&
+    role !== "admin"
   ) {
     return NextResponse.redirect(new URL("/tasks", nextUrl));
   }

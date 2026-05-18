@@ -11,7 +11,11 @@ import {
 import { relations } from "drizzle-orm";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
-export const userRoleEnum = pgEnum("user_role", ["super_user", "team_member"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "super_user",
+  "admin",
+  "team_member",
+]);
 export const ticketStatusEnum = pgEnum("ticket_status", [
   "open",
   "in_progress",
@@ -108,11 +112,42 @@ export const comments = pgTable(
   (t) => [index("comments_ticket_idx").on(t.ticketId)]
 );
 
+// ─── Invites ──────────────────────────────────────────────────────────────────
+export const invites = pgTable(
+  "invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    email: text("email").unique().notNull(),
+    role: userRoleEnum("role").notNull().default("team_member"),
+    token: text("token").unique().notNull(),
+    message: text("message"),
+    invitedById: uuid("invited_by_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    isAccepted: boolean("is_accepted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("invites_email_idx").on(t.email)]
+);
+
+export const invitesRelations = relations(invites, ({ one }) => ({
+  invitedBy: one(users, {
+    fields: [invites.invitedById],
+    references: [users.id],
+  }),
+}));
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({
   assignedTickets: many(tickets, { relationName: "assignee" }),
   createdTickets: many(tickets, { relationName: "creator" }),
   comments: many(comments),
+  sentInvites: many(invites),
 }));
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
@@ -155,6 +190,6 @@ export type Ticket = typeof tickets.$inferSelect;
 export type NewTicket = typeof tickets.$inferInsert;
 export type ChecklistItem = typeof checklistItems.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
-export type UserRole = "super_user" | "team_member";
+export type UserRole = "super_user" | "admin" | "team_member";
 export type TicketStatus = "open" | "in_progress" | "review" | "done" | "closed";
 export type TicketPriority = "low" | "medium" | "high";

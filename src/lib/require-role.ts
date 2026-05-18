@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 
-export type AllowedRole = "super_user" | "team_member";
+export type AllowedRole = "super_user" | "admin" | "team_member";
 
 export async function requireRole(
   allowedRoles: AllowedRole[]
@@ -27,9 +27,9 @@ export async function requireRole(
 }
 
 export async function requireSuperUser() {
-  return requireRole(["super_user"]);
+  return requireRole(["super_user", "admin"]);
 }
 
 export async function requireAnyRole() {
-  return requireRole(["super_user", "team_member"]);
+  return requireRole(["super_user", "admin", "team_member"]);
 }

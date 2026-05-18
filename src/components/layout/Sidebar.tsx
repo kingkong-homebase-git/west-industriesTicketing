@@ -57,7 +57,7 @@ export default function Sidebar({ role }: SidebarProps) {
               </div>
             </Link>
             
-            {role === "super_user" && (
+            {(role === "super_user" || role === "admin") && (
               <>
                 <Link
                   href="/team-board"

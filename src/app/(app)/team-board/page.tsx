@@ -12,7 +12,7 @@ export default async function TeamBoardPage() {
   const role = ((session?.user as any)?.role as string) ?? "team_member";
   const userId = session?.user?.id ?? "";
 
-  if (role !== "super_user") {
+  if (role !== "super_user" && role !== "admin") {
     redirect("/tasks");
   }
 

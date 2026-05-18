@@ -45,10 +45,21 @@ export const AddCommentSchema = z.object({
   body: z.string().min(1).max(5000),
 });
 
-// ─── User ─────────────────────────────────────────────────────────────────────
 export const CreateUserSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(100),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["super_user", "team_member"]).default("team_member"),
+  role: z.enum(["super_user", "admin", "team_member"]).default("team_member"),
+});
+
+export const InviteUserSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["super_user", "admin", "team_member"]).default("team_member"),
+  message: z.string().max(2000).optional().nullable(),
+});
+
+export const AcceptInviteSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
