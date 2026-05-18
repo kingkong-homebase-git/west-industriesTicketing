@@ -11,9 +11,10 @@ interface HeaderProps {
 export default function Header({ user }: HeaderProps) {
   return (
     <header
-      className="h-14 flex items-center justify-between px-6 border-b shrink-0"
+      className="h-16 flex items-center justify-between px-6 border-b shrink-0"
       style={{
-        background: "var(--surface)",
+        background: "rgba(14, 19, 32, 0.45)",
+        backdropFilter: "blur(10px)",
         borderColor: "var(--border)",
       }}
     >

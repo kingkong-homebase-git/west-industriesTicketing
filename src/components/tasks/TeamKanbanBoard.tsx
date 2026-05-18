@@ -46,27 +46,27 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
             return (
               <div
                 key={col.id}
-                className="w-80 flex flex-col bg-surface-2/40 backdrop-blur-md rounded-2xl border border-border shrink-0 max-h-full"
+                className="w-80 flex flex-col bg-surface/30 backdrop-blur-md rounded-2xl border border-border shrink-0 max-h-full hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300"
               >
-                <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-surface-2/80 backdrop-blur-md z-10 rounded-t-2xl">
+                <div className="p-3.5 border-b border-border flex items-center justify-between sticky top-0 bg-surface-2/20 backdrop-blur-md z-10 rounded-t-2xl">
                   <div className="flex items-center gap-3">
                     {col.user ? (
-                      <Avatar.Root className="w-8 h-8 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                      <Avatar.Root className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
                         <Avatar.Fallback className="text-xs font-semibold text-accent">
                           {getInitials(col.title)}
                         </Avatar.Fallback>
                       </Avatar.Root>
                     ) : (
-                      <div className="w-8 h-8 rounded-full border border-dashed border-border flex items-center justify-center text-xs text-text-secondary shrink-0">
+                      <div className="w-8 h-8 rounded-full border border-dashed border-border/50 flex items-center justify-center text-xs text-text-secondary/60 shrink-0">
                         ?
                       </div>
                     )}
                     <div>
-                      <h3 className="font-semibold text-text-primary text-sm leading-none">{col.title}</h3>
+                      <h3 className="font-semibold text-text-primary text-sm leading-none tracking-wide">{col.title}</h3>
                       <p className="text-[10px] text-text-secondary mt-1">Assignee</p>
                     </div>
                   </div>
-                  <span className="bg-surface/60 text-text-secondary text-xs px-2 py-0.5 rounded-full border border-border">
+                  <span className="bg-accent/10 text-accent text-xs font-semibold px-2 py-0.5 rounded-full border border-accent/20">
                     {colTickets.length}
                   </span>
                 </div>
@@ -82,8 +82,8 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
                     />
                   ))}
                   {colTickets.length === 0 && (
-                    <div className="text-center p-4 text-sm text-text-secondary border-2 border-dashed border-border rounded-xl">
-                      No tasks assigned
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-sm text-text-secondary/40 border-2 border-dashed border-border/30 rounded-xl bg-surface-2/5 min-h-[150px]">
+                      <span className="text-xs font-medium">No tasks assigned</span>
                     </div>
                   )}
                 </div>

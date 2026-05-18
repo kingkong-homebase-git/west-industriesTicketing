@@ -38,7 +38,7 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
       {...listeners}
       onClick={() => onClick(ticket.id)}
       className={cn(
-        "bg-surface/80 backdrop-blur-md border border-border p-3 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-accent transition-all relative group",
+        "bg-surface/80 backdrop-blur-md border border-border p-3 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-accent hover:-translate-y-1 hover:shadow-md hover:shadow-accent/5 transition-all duration-300 relative group",
         isDragging && "opacity-50 ring-2 ring-accent"
       )}
     >

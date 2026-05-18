@@ -14,28 +14,30 @@ export default function Sidebar({ role }: SidebarProps) {
 
   return (
     <aside className="w-64 shrink-0 flex flex-col border-r bg-surface border-border">
-      <div className="h-16 flex items-center px-6 border-b border-border">
-        <div className="flex items-center gap-2 text-text-primary font-bold text-xl tracking-tight">
-          <Layers className="text-accent" />
-          West Industries
+      <div className="h-16 flex items-center px-6 border-b border-border bg-surface-2/10">
+        <div className="flex items-center gap-2.5 text-text-primary font-bold text-lg tracking-tight">
+          <Layers className="text-accent filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" size={20} />
+          <span className="bg-gradient-to-r from-text-primary via-text-primary to-accent bg-clip-text text-transparent">
+            West Industries
+          </span>
         </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
         <div>
-          <h4 className="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">Overview</h4>
-          <div className="space-y-1">
+          <h4 className="px-3 text-[10px] font-bold text-accent/80 uppercase tracking-widest mb-3">Overview</h4>
+          <div className="space-y-1.5">
             <Link
               href="/dashboard"
               className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                 pathname === "/dashboard"
-                  ? "bg-accent text-white shadow-md shadow-accent/20"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                  ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
               )}
             >
               <div className="flex items-center gap-3">
-                <LayoutDashboard size={18} />
+                <LayoutDashboard size={18} className={pathname === "/dashboard" ? "text-accent" : "text-text-secondary"} />
                 Dashboard
               </div>
             </Link>
@@ -43,14 +45,14 @@ export default function Sidebar({ role }: SidebarProps) {
             <Link
               href="/tasks"
               className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                 pathname.startsWith("/tasks")
-                  ? "bg-accent text-white shadow-md shadow-accent/20"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                  ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
               )}
             >
               <div className="flex items-center gap-3">
-                <CheckSquare size={18} />
+                <CheckSquare size={18} className={pathname.startsWith("/tasks") ? "text-accent" : "text-text-secondary"} />
                 My Tasks
               </div>
             </Link>
@@ -60,28 +62,28 @@ export default function Sidebar({ role }: SidebarProps) {
                 <Link
                   href="/team-board"
                   className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                     pathname.startsWith("/team-board")
-                      ? "bg-accent text-white shadow-md shadow-accent/20"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                      ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <KanbanSquare size={18} />
+                    <KanbanSquare size={18} className={pathname.startsWith("/team-board") ? "text-accent" : "text-text-secondary"} />
                     Team Tasks
                   </div>
                 </Link>
                 <Link
                   href="/team"
                   className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                     pathname === "/team"
-                      ? "bg-accent text-white shadow-md shadow-accent/20"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                      ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <Users size={18} />
+                    <Users size={18} className={pathname === "/team" ? "text-accent" : "text-text-secondary"} />
                     Team
                   </div>
                 </Link>
@@ -91,11 +93,19 @@ export default function Sidebar({ role }: SidebarProps) {
         </div>
       </nav>
 
-      <div className="p-6 border-t border-border">
-        <div className="bg-surface-2 rounded-xl p-4 relative overflow-hidden group border border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <p className="text-xs text-text-secondary mb-1">Role</p>
-          <p className="text-sm font-semibold text-text-primary capitalize">{role.replace("_", " ")}</p>
+      <div className="p-4 border-t border-border bg-surface-2/5">
+        <div className="flex flex-col gap-2">
+          <div className="text-[10px] text-text-secondary/50 font-mono tracking-wider">
+            v1.0.0
+          </div>
+          <div className="bg-surface-2/20 backdrop-blur-md px-3 py-2.5 rounded-xl border border-border shadow-[0_0_15px_rgba(59,130,246,0.02)]">
+            <div className="text-[9px] text-accent uppercase font-bold tracking-widest">
+              Access level
+            </div>
+            <div className="text-xs font-bold text-text-primary mt-1 capitalize tracking-wide">
+              {role.replace("_", " ")}
+            </div>
+          </div>
         </div>
       </div>
     </aside>

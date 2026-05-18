@@ -19,10 +19,10 @@ export default function KanbanColumn({ id, title, tickets, onCardClick }: Kanban
   });
 
   return (
-    <div className="flex flex-col flex-1 min-w-[280px] max-w-[320px] bg-surface-2/30 rounded-xl overflow-hidden border border-border">
-      <div className="p-3 border-b border-border flex items-center justify-between bg-surface-2/50">
-        <h3 className="font-semibold text-sm text-text-primary">{title}</h3>
-        <span className="text-xs font-medium bg-surface px-2 py-0.5 rounded-full text-text-secondary border border-border">
+    <div className="flex flex-col flex-1 min-w-[280px] max-w-[320px] bg-surface/30 backdrop-blur-md rounded-2xl overflow-hidden border border-border hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+      <div className="p-3.5 border-b border-border flex items-center justify-between bg-surface-2/20">
+        <h3 className="font-semibold text-sm text-text-primary tracking-wide">{title}</h3>
+        <span className="text-xs font-semibold bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20">
           {tickets.length}
         </span>
       </div>
@@ -30,7 +30,7 @@ export default function KanbanColumn({ id, title, tickets, onCardClick }: Kanban
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 p-2 flex flex-col gap-2 kanban-col-scroll transition-colors",
+          "flex-1 p-3 flex flex-col gap-3 kanban-col-scroll transition-colors duration-200",
           isOver && "bg-accent/5"
         )}
       >
@@ -40,8 +40,8 @@ export default function KanbanColumn({ id, title, tickets, onCardClick }: Kanban
               <TicketCard key={ticket.id} ticket={ticket} onClick={onCardClick} />
             ))
           ) : (
-            <div className="h-full flex items-center justify-center text-sm text-text-secondary/50 italic py-8 border-2 border-dashed border-border/50 rounded-lg">
-              No tickets
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-sm text-text-secondary/40 border-2 border-dashed border-border/30 rounded-xl bg-surface-2/5 min-h-[150px]">
+              <span className="text-xs font-medium">No tickets</span>
             </div>
           )}
         </SortableContext>

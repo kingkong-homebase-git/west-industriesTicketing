@@ -21,17 +21,23 @@ export default async function AppLayout({
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar role={user.role} />
       <div className="relative flex flex-col flex-1 min-w-0">
-        {/* Background Image with Overlay */}
+        {/* Background Image with Premium Atmospheric Glassmorphism Overlay */}
         <div 
-          className="absolute inset-0 z-0 opacity-40 pointer-events-none"
+          className="absolute inset-0 z-0 pointer-events-none"
           style={{
             backgroundImage: "url('/mountiankanban.jpeg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
+            opacity: 0.15,
           }}
         />
-        <div className="absolute inset-0 z-0 bg-background/85 backdrop-blur-[2px] pointer-events-none" />
+        <div 
+          className="absolute inset-0 z-0 backdrop-blur-[3px] pointer-events-none" 
+          style={{
+            backgroundColor: "rgba(5, 7, 13, 0.85)"
+          }}
+        />
         
         <div className="relative z-10 flex flex-col flex-1 h-full">
           <Header user={user} />
