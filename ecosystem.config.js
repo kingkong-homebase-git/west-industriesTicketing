@@ -19,9 +19,14 @@ module.exports = {
       // app on the given schedule; with autorestart:false the script runs
       // once per restart, exits, then waits for the next cron firing.
       // Override the schedule via NOTION_POLL_CRON in the env if needed.
+      //
+      // We invoke ./node_modules/.bin/tsx directly rather than going
+      // through `pnpm exec` so this works regardless of whether pnpm is
+      // on PM2's PATH. tsx must remain a regular dependency (not devDep)
+      // so production deploys keep it installed.
       name: "west-industries-sync",
-      script: "pnpm",
-      args: "exec tsx scripts/sync-poll.ts",
+      script: "./node_modules/.bin/tsx",
+      args: "scripts/sync-poll.ts",
       cwd: "/var/www/west-industries", // adjust to match the droplet path
       instances: 1,
       autorestart: false,

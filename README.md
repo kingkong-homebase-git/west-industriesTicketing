@@ -49,6 +49,12 @@ Internal operations dashboard (v1: Tasks system). Built with Next.js 15, App Rou
 - `SEED_ADMIN_PASSWORD`: Password for the initial `super_user`.
 - `NODE_ENV`: Set to `production` when deployed.
 
+### Notion sync
+- `NOTION_TOKEN`: Internal-integration secret from `https://www.notion.so/profile/integrations`. The integration must be connected to the Tasks database page (open the DB → `⋯` → Connections → add).
+- `NOTION_DATABASE_ID`: 32-hex chunk before `?v=` in the Notion database URL. Resolved internally to a primary data source ID (Notion API 2025-09-03).
+- `NOTION_SYNC_ENABLED`: Kill switch. Set to `false` to disable all push/pull. Defaults to `true`. When false, `pushTicketToNotion` and `pullAllFromNotion` no-op silently.
+- `NOTION_POLL_CRON`: Cron schedule for the PM2 sync worker (`west-industries-sync` app in `ecosystem.config.js`). Default `*/5 * * * *` (every 5 minutes).
+
 ## Deployment (PM2 & Nginx)
 
 1. **Production Build**
@@ -57,12 +63,17 @@ Internal operations dashboard (v1: Tasks system). Built with Next.js 15, App Rou
    ```
 
 2. **PM2 Setup**
-   Ensure `ecosystem.config.js` `cwd` matches your deployment path.
+   Ensure `ecosystem.config.js` `cwd` matches your deployment path in **both** app entries (`west-industries` and `west-industries-sync`).
    ```bash
    pm2 start ecosystem.config.js --env production
    pm2 save
    pm2 startup
    ```
+   This launches two apps:
+   - `west-industries` — the Next.js server on port 3000.
+   - `west-industries-sync` — the Notion poll worker. Runs once per `cron_restart` firing (default every 5 min via `NOTION_POLL_CRON`), then exits. The script is invoked directly via `./node_modules/.bin/tsx` so PM2 doesn't need `pnpm` on its PATH. `tsx` is a regular dependency (not a devDependency) so production installs keep it.
+   - Confirm both came up: `pm2 list` should show two running entries.
+   - Tail the sync worker: `pm2 logs west-industries-sync`.
 
 3. **Nginx Reverse Proxy Snippet**
    ```nginx

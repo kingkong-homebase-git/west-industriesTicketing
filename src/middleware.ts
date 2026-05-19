@@ -26,6 +26,11 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/tasks", nextUrl));
   }
 
+  // Admin section: super_user only
+  if (nextUrl.pathname.startsWith("/admin") && role !== "super_user") {
+    return NextResponse.redirect(new URL("/tasks", nextUrl));
+  }
+
   return NextResponse.next();
 });
 

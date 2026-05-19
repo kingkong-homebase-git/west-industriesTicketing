@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, Users, KanbanSquare, Layers, LayoutDashboard } from "lucide-react";
+import { CheckSquare, Users, KanbanSquare, Layers, LayoutDashboard, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -91,6 +91,28 @@ export default function Sidebar({ role }: SidebarProps) {
             )}
           </div>
         </div>
+
+        {role === "super_user" && (
+          <div>
+            <h4 className="px-3 text-[10px] font-bold text-accent/80 uppercase tracking-widest mb-3">Admin</h4>
+            <div className="space-y-1.5">
+              <Link
+                href="/admin/sync-logs"
+                className={cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+                  pathname.startsWith("/admin/sync-logs")
+                    ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Activity size={18} className={pathname.startsWith("/admin/sync-logs") ? "text-accent" : "text-text-secondary"} />
+                  Sync logs
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="p-4 border-t border-border bg-surface-2/5">
