@@ -10,6 +10,8 @@ import {
   UpdateStatusSchema,
 } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
+import { pushTicketToNotion, archiveNotionPage } from "@/lib/sync/push";
+import { debouncePush } from "@/lib/sync/debounce";
 
 // ─── Get all tickets (grouped for board) ─────────────────────────────────────
 export async function getTickets() {
@@ -97,6 +99,9 @@ export async function createTicket(data: unknown) {
     })
     .returning();
 
+  // Synchronous push on create so we have the notion_page_id before returning.
+  await pushTicketToNotion(ticket.id);
+
   revalidatePath("/tasks");
   return ticket;
 }
@@ -115,6 +120,8 @@ export async function updateTicket(id: string, data: unknown) {
     })
     .where(eq(tickets.id, id))
     .returning();
+
+  debouncePush(id, () => pushTicketToNotion(id));
 
   revalidatePath("/tasks");
   return ticket;
@@ -135,6 +142,8 @@ export async function updateTicketStatus(id: string, data: unknown) {
     .where(eq(tickets.id, id))
     .returning();
 
+  debouncePush(id, () => pushTicketToNotion(id));
+
   revalidatePath("/tasks");
   return ticket;
 }
@@ -143,6 +152,19 @@ export async function updateTicketStatus(id: string, data: unknown) {
 export async function deleteTicket(id: string) {
   await requireSuperUser();
 
+  // Capture the notion_page_id before deletion so we can archive the
+  // remote page after the local row is gone.
+  const [existing] = await db
+    .select({ notionPageId: tickets.notionPageId })
+    .from(tickets)
+    .where(eq(tickets.id, id))
+    .limit(1);
+
   await db.delete(tickets).where(eq(tickets.id, id));
+
+  if (existing?.notionPageId) {
+    void archiveNotionPage(existing.notionPageId, id);
+  }
+
   revalidatePath("/tasks");
 }

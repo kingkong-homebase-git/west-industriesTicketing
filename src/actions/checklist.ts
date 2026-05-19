@@ -6,6 +6,17 @@ import { eq } from "drizzle-orm";
 import { requireAnyRole, requireSuperUser } from "@/lib/require-role";
 import { AddChecklistItemSchema, ReorderChecklistSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
+import { pushTicketToNotion } from "@/lib/sync/push";
+import { debouncePush } from "@/lib/sync/debounce";
+
+async function ticketIdForItem(itemId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ ticketId: checklistItems.ticketId })
+    .from(checklistItems)
+    .where(eq(checklistItems.id, itemId))
+    .limit(1);
+  return row?.ticketId ?? null;
+}
 
 export async function addChecklistItem(data: unknown) {
   await requireAnyRole();
@@ -23,6 +34,8 @@ export async function addChecklistItem(data: unknown) {
     .values({ ...parsed, sortOrder: maxSort + 1 })
     .returning();
 
+  debouncePush(parsed.ticketId, () => pushTicketToNotion(parsed.ticketId));
+
   revalidatePath("/tasks");
   return item;
 }
@@ -36,6 +49,10 @@ export async function toggleChecklistItem(itemId: string, isDone: boolean) {
     .where(eq(checklistItems.id, itemId))
     .returning();
 
+  if (item) {
+    debouncePush(item.ticketId, () => pushTicketToNotion(item.ticketId));
+  }
+
   revalidatePath("/tasks");
   return item;
 }
@@ -43,7 +60,15 @@ export async function toggleChecklistItem(itemId: string, isDone: boolean) {
 export async function deleteChecklistItem(itemId: string) {
   await requireSuperUser();
 
+  // Capture ticketId before the row is gone.
+  const ticketId = await ticketIdForItem(itemId);
+
   await db.delete(checklistItems).where(eq(checklistItems.id, itemId));
+
+  if (ticketId) {
+    debouncePush(ticketId, () => pushTicketToNotion(ticketId));
+  }
+
   revalidatePath("/tasks");
 }
 
@@ -59,6 +84,14 @@ export async function reorderChecklistItems(data: unknown) {
         .where(eq(checklistItems.id, id))
     )
   );
+
+  // All items belong to the same ticket; look up via the first id.
+  if (parsed.orderedIds.length > 0) {
+    const ticketId = await ticketIdForItem(parsed.orderedIds[0]);
+    if (ticketId) {
+      debouncePush(ticketId, () => pushTicketToNotion(ticketId));
+    }
+  }
 
   revalidatePath("/tasks");
 }
