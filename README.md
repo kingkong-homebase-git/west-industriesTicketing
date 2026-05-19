@@ -92,8 +92,10 @@ Internal operations dashboard (v1: Tasks system). Built with Next.js 15, App Rou
 | View Tasks | ✅ | ✅ |
 | Create Task | ✅ | ❌ |
 | Edit Details (Title, Desc, etc.) | ✅ | ❌ |
-| Update Status | ✅ Full range | ✅ Only `In Progress` → `Review` (Own tickets) |
+| Update Status | ✅ Full range | ❌ |
 | Delete Task | ✅ | ❌ |
 | Manage Checklist | ✅ Full CRUD, reorder | ✅ Toggle done only |
 | Add Comments | ✅ | ✅ |
 | Manage Team | ✅ | ❌ |
+
+Ticket statuses mirror the Notion workspace exactly: `not_started`, `on_track`, `behind`, `at_risk`, `reprioritized`, `accomplished`, `failed`.

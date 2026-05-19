@@ -35,7 +35,7 @@ export default function TicketForm({
 }: TicketFormProps) {
   const [title, setTitle] = useState(ticket?.title || "");
   const [description, setDescription] = useState(ticket?.description || "");
-  const [status, setStatus] = useState(ticket?.status || "open");
+  const [status, setStatus] = useState(ticket?.status || "not_started");
   const [priority, setPriority] = useState(ticket?.priority || "medium");
   const [assigneeId, setAssigneeId] = useState(ticket?.assigneeId || "none");
   const [deadline, setDeadline] = useState<Date | null>(
@@ -47,8 +47,6 @@ export default function TicketForm({
   const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   const isSuperUser = role === "super_user";
-  const isAssignee = ticket?.assigneeId === userId;
-
   const canEditFields = isSuperUser || isCreateMode;
 
   const triggerSave = async (updates: any) => {
@@ -122,7 +120,7 @@ export default function TicketForm({
               setStatus(val);
               triggerSave({ status: val });
             }}
-            disabled={!isSuperUser && !(isAssignee && status === "in_progress")}
+            disabled={!isSuperUser}
           >
             <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />
@@ -133,24 +131,28 @@ export default function TicketForm({
             <Select.Portal>
               <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
                 <Select.Viewport className="p-1">
-                  {["open", "in_progress", "review", "done", "closed"].map((s) => {
-                    // Team member can only move from in_progress to review
-                    if (!isSuperUser && s !== "review") return null;
-                    if (!isSuperUser && status !== "in_progress") return null;
-
-                    return (
-                      <Select.Item
-                        key={s}
-                        value={s}
-                        className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
-                      >
-                        <Select.ItemText className="capitalize">{s.replace("_", " ")}</Select.ItemText>
-                        <Select.ItemIndicator className="absolute left-1.5">
-                          <Check size={14} />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                    );
-                  })}
+                  {[
+                    "not_started",
+                    "on_track",
+                    "behind",
+                    "at_risk",
+                    "reprioritized",
+                    "accomplished",
+                    "failed",
+                  ].map((s) => (
+                    <Select.Item
+                      key={s}
+                      value={s}
+                      className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
+                    >
+                      <Select.ItemText className="capitalize">
+                        {s.replace(/_/g, " ")}
+                      </Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-1.5">
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
                 </Select.Viewport>
               </Select.Content>
             </Select.Portal>

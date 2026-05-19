@@ -29,17 +29,21 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: "open", title: "To Do" },
-  { id: "in_progress", title: "In Progress" },
-  { id: "review", title: "Review" },
-  { id: "done", title: "Done" },
+  { id: "not_started", title: "Not Started" },
+  { id: "on_track", title: "On Track" },
+  { id: "behind", title: "Behind" },
+  { id: "at_risk", title: "At Risk" },
+  { id: "reprioritized", title: "Reprioritized" },
+  { id: "accomplished", title: "Accomplished" },
+  { id: "failed", title: "Failed" },
 ];
+
+const DONE_STATUSES = new Set(["accomplished", "failed"]);
 
 export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tickets, setTickets] = useState(initialTickets);
-  const [showClosed, setShowClosed] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
@@ -71,9 +75,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
     };
   }, [router]);
 
-  const columns = showClosed
-    ? [...COLUMNS, { id: "closed", title: "Closed" }]
-    : COLUMNS;
+  const columns = COLUMNS;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -139,17 +141,13 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
     const activeTicket = getTicketById(activeId);
     if (!activeTicket) return;
 
-    // Check permissions before allowing the drop natively to persist
     const newStatus = activeTicket.status;
-    const oldStatus = initialTickets.find(t => t.id === activeId)?.status;
-    
-    if (role === "team_member" && newStatus !== oldStatus) {
-      const allowed = oldStatus === "in_progress" && newStatus === "review";
-      if (!allowed || activeTicket.assigneeId !== userId) {
-        toast.error("You don't have permission to move this ticket there");
-        setTickets(initialTickets); // rollback
-        return;
-      }
+    const oldStatus = initialTickets.find((t) => t.id === activeId)?.status;
+
+    if (role !== "super_user" && newStatus !== oldStatus) {
+      toast.error("Only super users can change ticket status");
+      setTickets(initialTickets); // rollback
+      return;
     }
 
     // Calculate new sort orders for the target column
@@ -182,10 +180,10 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
   }
 
   const totalTasks = tickets.length;
-  const inProgressTasks = tickets.filter(t => t.status === "in_progress").length;
-  const completedTasks = tickets.filter(t => t.status === "done" || t.status === "closed").length;
-  const overdueTasks = tickets.filter(t => {
-    if (t.status === "done" || t.status === "closed") return false;
+  const onTrackTasks = tickets.filter((t) => t.status === "on_track").length;
+  const accomplishedTasks = tickets.filter((t) => t.status === "accomplished").length;
+  const overdueTasks = tickets.filter((t) => {
+    if (DONE_STATUSES.has(t.status)) return false;
     if (!t.deadline) return false;
     return new Date(t.deadline) < new Date();
   }).length;
@@ -213,44 +211,29 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
           <div className="text-xs text-text-secondary">Past deadline</div>
         </div>
 
-        {/* In Progress */}
+        {/* On Track */}
         <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-xl flex flex-col gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-text-primary">In Progress</span>
+            <span className="text-sm font-semibold text-text-primary">On Track</span>
             <span className="text-xs font-medium bg-warning/20 text-warning px-2 py-1 rounded-full">Active</span>
           </div>
-          <div className="text-3xl font-bold text-text-primary">{inProgressTasks}</div>
+          <div className="text-3xl font-bold text-text-primary">{onTrackTasks}</div>
           <div className="text-xs text-text-secondary">Being worked on</div>
         </div>
 
-        {/* Completed */}
+        {/* Accomplished */}
         <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-5 rounded-2xl shadow-xl flex flex-col gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-text-primary">Completed</span>
+            <span className="text-sm font-semibold text-text-primary">Accomplished</span>
             <span className="text-xs font-medium bg-success/20 text-success px-2 py-1 rounded-full">Done</span>
           </div>
-          <div className="text-3xl font-bold text-text-primary">{completedTasks}</div>
+          <div className="text-3xl font-bold text-text-primary">{accomplishedTasks}</div>
           <div className="text-xs text-text-secondary">Successfully finished</div>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-text-primary">My Tasks</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-text-secondary">Show Closed</span>
-          <button
-            onClick={() => setShowClosed(!showClosed)}
-            className={`w-10 h-5 rounded-full relative transition-colors ${
-              showClosed ? "bg-accent" : "bg-surface-2 border border-border"
-            }`}
-          >
-            <div
-              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                showClosed ? "left-5" : "left-0.5"
-              }`}
-            />
-          </button>
-        </div>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">
@@ -267,7 +250,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
                 key={col.id}
                 id={col.id}
                 title={col.title}
-                tickets={tickets.filter((t) => t.status === col.id).filter(t => showClosed || t.status !== "closed")}
+                tickets={tickets.filter((t) => t.status === col.id)}
                 onCardClick={(id) => {
                   setSelectedTicketId(id);
                   setIsCreateMode(false);

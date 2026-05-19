@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { X, MoreVertical } from "lucide-react";
 import { getTicketDetail, updateTicketStatus } from "@/actions/tickets";
 import TicketForm from "./TicketForm";
 import ChecklistSection from "./ChecklistSection";
 import CommentsSection from "./CommentsSection";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+const DONE_STATUSES = new Set(["accomplished", "failed"]);
 
 interface SlideOverProps {
   isOpen: boolean;
@@ -30,7 +33,9 @@ export default function SlideOver({
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState<
+    "accomplished" | "failed" | null
+  >(null);
 
   useEffect(() => {
     if (isOpen && ticketId && !isCreateMode) {
@@ -48,21 +53,23 @@ export default function SlideOver({
       });
     } else {
       setData(null);
-      setShowConfirmClose(false);
+      setConfirmStatus(null);
     }
   }, [isOpen, ticketId, isCreateMode, onClose]);
 
-  const handleCloseTicket = async () => {
+  const handleMarkStatus = async (status: "accomplished" | "failed") => {
     if (!ticketId) return;
 
     try {
-      await updateTicketStatus(ticketId, { status: "closed", sortOrder: 0 });
-      toast.success("Ticket closed");
+      await updateTicketStatus(ticketId, { status, sortOrder: 0 });
+      toast.success(
+        status === "accomplished" ? "Marked as accomplished" : "Marked as failed"
+      );
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Failed to close ticket");
+      toast.error(err.message || "Failed to update ticket");
     } finally {
-      setShowConfirmClose(false);
+      setConfirmStatus(null);
     }
   };
 
@@ -76,25 +83,38 @@ export default function SlideOver({
             isOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
-          {showConfirmClose && (
+          {confirmStatus && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
               <div className="bg-surface/85 backdrop-blur-md border border-border p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
-                <h3 className="text-lg font-semibold text-text-primary mb-2">Close Ticket</h3>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
+                  {confirmStatus === "accomplished"
+                    ? "Mark as Accomplished"
+                    : "Mark as Failed"}
+                </h3>
                 <p className="text-sm text-text-secondary mb-6">
-                  Are you sure you want to close this ticket? It will be moved to the closed list.
+                  {confirmStatus === "accomplished"
+                    ? "This ticket will be marked as accomplished."
+                    : "This ticket will be marked as failed. Use this when the work was abandoned or could not be completed."}
                 </p>
                 <div className="flex items-center justify-end gap-3">
                   <button
-                    onClick={() => setShowConfirmClose(false)}
+                    onClick={() => setConfirmStatus(null)}
                     className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleCloseTicket}
-                    className="px-4 py-2 bg-danger text-white rounded-lg text-sm font-medium hover:bg-danger/90 transition-colors"
+                    onClick={() => handleMarkStatus(confirmStatus)}
+                    className={cn(
+                      "px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors",
+                      confirmStatus === "accomplished"
+                        ? "bg-success hover:bg-success/90"
+                        : "bg-danger hover:bg-danger/90"
+                    )}
                   >
-                    Yes, Close
+                    {confirmStatus === "accomplished"
+                      ? "Yes, Accomplished"
+                      : "Yes, Failed"}
                   </button>
                 </div>
               </div>
@@ -148,16 +168,38 @@ export default function SlideOver({
             ) : null}
           </div>
 
-          {!isCreateMode && role === "super_user" && data?.ticket?.status !== "closed" && (
-            <div className="p-4 border-t border-border shrink-0 bg-surface-2/20 backdrop-blur-md">
-              <button
-                onClick={() => setShowConfirmClose(true)}
-                className="w-full py-2.5 rounded-lg border border-danger/30 text-danger font-medium hover:bg-danger/10 transition-colors"
-              >
-                Close Ticket
-              </button>
-            </div>
-          )}
+          {!isCreateMode &&
+            role === "super_user" &&
+            data?.ticket?.status &&
+            !DONE_STATUSES.has(data.ticket.status) && (
+              <div className="p-4 border-t border-border shrink-0 bg-surface-2/20 backdrop-blur-md flex gap-2">
+                <button
+                  onClick={() => setConfirmStatus("accomplished")}
+                  className="flex-1 py-2.5 rounded-lg border border-success/30 text-success font-medium hover:bg-success/10 transition-colors"
+                >
+                  Mark Accomplished
+                </button>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger className="px-3 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors">
+                    <MoreVertical size={18} />
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={4}
+                      className="bg-surface/95 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60] p-1 min-w-[160px]"
+                    >
+                      <DropdownMenu.Item
+                        onSelect={() => setConfirmStatus("failed")}
+                        className="text-sm text-danger px-3 py-1.5 rounded cursor-pointer outline-none hover:bg-danger/10"
+                      >
+                        Mark as Failed
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+            )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

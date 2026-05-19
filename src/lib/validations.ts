@@ -8,8 +8,16 @@ export const CreateTicketSchema = z.object({
   assigneeId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),
   status: z
-    .enum(["open", "in_progress", "review", "done", "closed"])
-    .default("open"),
+    .enum([
+      "not_started",
+      "on_track",
+      "behind",
+      "at_risk",
+      "reprioritized",
+      "accomplished",
+      "failed",
+    ])
+    .default("not_started"),
 });
 
 export const UpdateTicketSchema = z.object({
@@ -19,12 +27,28 @@ export const UpdateTicketSchema = z.object({
   assigneeId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),
   status: z
-    .enum(["open", "in_progress", "review", "done", "closed"])
+    .enum([
+      "not_started",
+      "on_track",
+      "behind",
+      "at_risk",
+      "reprioritized",
+      "accomplished",
+      "failed",
+    ])
     .optional(),
 });
 
 export const UpdateStatusSchema = z.object({
-  status: z.enum(["open", "in_progress", "review", "done", "closed"]),
+  status: z.enum([
+    "not_started",
+    "on_track",
+    "behind",
+    "at_risk",
+    "reprioritized",
+    "accomplished",
+    "failed",
+  ]),
   sortOrder: z.number().int().default(0),
 });
 

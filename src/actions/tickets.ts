@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { tickets, checklistItems, comments, users } from "../../drizzle/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { requireAnyRole, requireSuperUser } from "@/lib/require-role";
 import {
   CreateTicketSchema,
@@ -12,7 +12,7 @@ import {
 import { revalidatePath } from "next/cache";
 
 // ─── Get all tickets (grouped for board) ─────────────────────────────────────
-export async function getTickets(includesClosed = false) {
+export async function getTickets() {
   await requireAnyRole();
 
   const rows = await db
@@ -32,10 +32,7 @@ export async function getTickets(includesClosed = false) {
       asc(tickets.createdAt)
     );
 
-  return rows.filter((r) => {
-    if (!includesClosed && r.ticket.status === "closed") return false;
-    return true;
-  });
+  return rows;
 }
 
 // ─── Get ticket detail (for slide-over) ──────────────────────────────────────
@@ -124,38 +121,9 @@ export async function updateTicket(id: string, data: unknown) {
 }
 
 // ─── Update ticket status ─────────────────────────────────────────────────────
-export async function updateTicketStatus(
-  id: string,
-  data: unknown
-) {
-  const { role, userId } = await requireAnyRole();
+export async function updateTicketStatus(id: string, data: unknown) {
+  await requireSuperUser();
   const parsed = UpdateStatusSchema.parse(data);
-
-  // Team member restriction: can only move to "review" if ticket is theirs and was "in_progress"
-  if (role === "team_member") {
-    const [existing] = await db
-      .select()
-      .from(tickets)
-      .where(eq(tickets.id, id))
-      .limit(1);
-
-    if (!existing) throw new Error("Ticket not found");
-
-    const allowedTransitions: Record<string, string[]> = {
-      in_progress: ["review"],
-    };
-
-    const allowed = allowedTransitions[existing.status] ?? [];
-    if (!allowed.includes(parsed.status)) {
-      throw new Error(
-        `Forbidden: team_member cannot move from ${existing.status} to ${parsed.status}`
-      );
-    }
-
-    if (existing.assigneeId !== userId) {
-      throw new Error("Forbidden: you can only move your own tickets");
-    }
-  }
 
   const [ticket] = await db
     .update(tickets)
