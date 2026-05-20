@@ -95,7 +95,15 @@ pm2 save
 
 ## Next up — three new feature requests (the resume target)
 
+### 0. Prerequisites (do these before / alongside #1)
+- **Point a domain at the app + add HTTPS** (currently bare `http://IP:3000`).
+  Required for Resend domain verification and to clear the "Not secure" warning.
+- **Rotate the secrets** exposed in the screenshot: `AUTH_SECRET`,
+  `RESEND_API_KEY`, `NOTION_TOKEN`, DB password, Gmail app password.
+
 ### 1. Open invitations — invite anyone, zero-friction onboarding
+**Gated on the domain (#0):** Resend will not deliver to arbitrary recipients
+until a sending domain is verified.
 Invite any email address; recipient receives the styled email → clicks Accept →
 sets a password → is logged in with access. No manual steps.
 - Verify a sending domain in Resend (DNS records) so arbitrary recipients get mail;
@@ -110,6 +118,8 @@ Allow `role=team_member` to create tickets that appear under their own "My Tasks
   `src/actions/tickets.ts` and the create UI).
 - Auto-assign new tickets to the creator so they land in "My Tasks"
   (which filters by `assignee_id`).
+- **Org visibility:** those same tickets must also appear in the org-wide
+  "Tasks"/Team board so the whole org can see them (not only the creator).
 
 ### 3. Admin can remove users from "My Team"
 Add a super-user/admin action in the Team UI to remove (deactivate or delete) a user.
