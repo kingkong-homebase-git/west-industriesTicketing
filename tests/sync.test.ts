@@ -151,6 +151,27 @@ const {
   notionPropertyToTicketFields,
   ticketFieldsToNotionProperties,
 } = await import("@/lib/notion");
+const { buildPageBlocks, isManagedMarkerBlock } = await import(
+  "@/lib/sync/body"
+);
+
+// Build a Notion-list-shaped callout that mirrors our managed marker, so we can
+// exercise isManagedMarkerBlock against the shape the API actually returns.
+function markerListBlock(id: string) {
+  return {
+    id,
+    type: "callout",
+    callout: {
+      rich_text: [
+        {
+          type: "text",
+          plain_text:
+            "Synced from West Industries — everything below this line is auto-managed and will be overwritten on each sync. Add your own notes above it.",
+        },
+      ],
+    },
+  };
+}
 
 // ─── Shared fixtures ────────────────────────────────────────────────────────
 function ticketRow(overrides: Record<string, unknown> = {}) {
@@ -340,6 +361,111 @@ describe("push.ts — pushTicketToNotion", () => {
         (u.values as { notionSyncStatus?: string }).notionSyncStatus === "failed"
     );
     expect(failedFlag).toBeTruthy();
+  });
+});
+
+describe("body.ts — managed-section marker", () => {
+  it("buildPageBlocks always opens with the managed marker callout", () => {
+    const blocks = buildPageBlocks({
+      description: "Hello",
+      checklist: [],
+      comments: [],
+    });
+    expect(isManagedMarkerBlock(blocks[0])).toBe(true);
+  });
+
+  it("isManagedMarkerBlock matches the marker and rejects human blocks", () => {
+    expect(isManagedMarkerBlock(markerListBlock("m1"))).toBe(true);
+    expect(
+      isManagedMarkerBlock({
+        id: "h1",
+        type: "paragraph",
+        paragraph: { rich_text: [{ plain_text: "my own notes" }] },
+      })
+    ).toBe(false);
+    expect(
+      isManagedMarkerBlock({
+        id: "h2",
+        type: "callout",
+        callout: { rich_text: [{ plain_text: "unrelated callout" }] },
+      })
+    ).toBe(false);
+    expect(isManagedMarkerBlock(null)).toBe(false);
+  });
+});
+
+describe("push.ts — replacePageBody preserves human content", () => {
+  it("deletes only blocks from the marker down, leaving content above untouched", async () => {
+    const ticket = ticketRow({
+      notionPageId: "page-with-notes",
+      notionLastEditedTime: new Date("2026-05-19T09:00:00.000Z"),
+    });
+    selectQ = [[ticket], [], []]; // ticket, checklist, comments
+
+    databasesRetrieve.mockResolvedValue(databaseStub());
+    dataSourcesRetrieve.mockResolvedValue(dataSourceStub());
+    pagesRetrieve
+      .mockResolvedValueOnce({
+        id: "page-with-notes",
+        last_edited_time: "2026-05-19T09:00:00.000Z", // no conflict
+      })
+      .mockResolvedValueOnce({
+        id: "page-with-notes",
+        last_edited_time: "2026-05-19T12:00:00.000Z",
+      });
+    pagesUpdate.mockResolvedValue({});
+    blocksList.mockResolvedValue({
+      results: [
+        { id: "human-1", type: "paragraph" },
+        { id: "human-2", type: "heading_2" },
+        markerListBlock("marker"),
+        { id: "old-managed-1", type: "paragraph" },
+        { id: "old-managed-2", type: "to_do" },
+      ],
+    });
+    blocksAppend.mockResolvedValue({});
+
+    await pushTicketToNotion(ticket.id);
+
+    const deletedIds = blocksDelete.mock.calls.map(
+      (c) => (c[0] as { block_id: string }).block_id
+    );
+    expect(deletedIds).toEqual(["marker", "old-managed-1", "old-managed-2"]);
+    expect(deletedIds).not.toContain("human-1");
+    expect(deletedIds).not.toContain("human-2");
+  });
+
+  it("deletes nothing when no marker is present (first sync of a page with content)", async () => {
+    const ticket = ticketRow({
+      notionPageId: "legacy-page",
+      notionLastEditedTime: new Date("2026-05-19T09:00:00.000Z"),
+    });
+    selectQ = [[ticket], [], []];
+
+    databasesRetrieve.mockResolvedValue(databaseStub());
+    dataSourcesRetrieve.mockResolvedValue(dataSourceStub());
+    pagesRetrieve
+      .mockResolvedValueOnce({
+        id: "legacy-page",
+        last_edited_time: "2026-05-19T09:00:00.000Z",
+      })
+      .mockResolvedValueOnce({
+        id: "legacy-page",
+        last_edited_time: "2026-05-19T12:00:00.000Z",
+      });
+    pagesUpdate.mockResolvedValue({});
+    blocksList.mockResolvedValue({
+      results: [
+        { id: "human-1", type: "paragraph" },
+        { id: "human-2", type: "bulleted_list_item" },
+      ],
+    });
+    blocksAppend.mockResolvedValue({});
+
+    await pushTicketToNotion(ticket.id);
+
+    expect(blocksDelete).not.toHaveBeenCalled();
+    expect(blocksAppend).toHaveBeenCalled();
   });
 });
 

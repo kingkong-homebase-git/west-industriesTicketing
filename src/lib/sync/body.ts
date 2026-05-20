@@ -7,6 +7,48 @@
  * read-projection for description; round-trip authoring lives in the dashboard.
  */
 
+// Sentinel that opens our auto-managed region. Everything from this marker
+// downward is owned by the sync and replaced on every push; anything a human
+// writes ABOVE it is never touched. The leading phrase is what we match on when
+// listing existing page children, so it must stay stable.
+export const MANAGED_MARKER_PREFIX = "Synced from West Industries";
+const MANAGED_MARKER_TEXT =
+  `${MANAGED_MARKER_PREFIX} — everything below this line is auto-managed and ` +
+  `will be overwritten on each sync. Add your own notes above it.`;
+
+function managedMarkerBlock() {
+  return {
+    object: "block",
+    type: "callout",
+    callout: {
+      rich_text: richText(MANAGED_MARKER_TEXT),
+      icon: { type: "emoji", emoji: "⚙️" },
+    },
+  };
+}
+
+/**
+ * True if a Notion child block (as returned by blocks.children.list) is our
+ * managed-section marker. Tolerant of shape: only reads what it needs.
+ */
+export function isManagedMarkerBlock(block: unknown): boolean {
+  if (typeof block !== "object" || block === null) return false;
+  const b = block as { type?: string; callout?: { rich_text?: unknown } };
+  if (b.type !== "callout" || !b.callout) return false;
+  const rt = b.callout.rich_text;
+  if (!Array.isArray(rt)) return false;
+  const text = rt
+    .map((seg) =>
+      typeof seg === "object" && seg !== null
+        ? ((seg as { plain_text?: string }).plain_text ??
+          (seg as { text?: { content?: string } }).text?.content ??
+          "")
+        : ""
+    )
+    .join("");
+  return text.startsWith(MANAGED_MARKER_PREFIX);
+}
+
 export type ChecklistInput = { label: string; isDone: boolean };
 export type CommentInput = {
   body: string;
@@ -64,7 +106,7 @@ export function buildPageBlocks(input: {
   checklist: ChecklistInput[];
   comments: CommentInput[];
 }): Array<Record<string, unknown>> {
-  const blocks: Array<Record<string, unknown>> = [];
+  const blocks: Array<Record<string, unknown>> = [managedMarkerBlock()];
 
   if (input.description && input.description.trim()) {
     const paragraphs = input.description.split(/\n{2,}/);

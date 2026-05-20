@@ -26,7 +26,7 @@ import {
   rateLimitedNotionCall,
   ticketFieldsToNotionProperties,
 } from "@/lib/notion";
-import { buildPageBlocks } from "./body";
+import { buildPageBlocks, isManagedMarkerBlock } from "./body";
 
 type NotionPageResponse = {
   id: string;
@@ -218,13 +218,22 @@ async function replacePageBody(
   pageId: string,
   blocks: Array<Record<string, unknown>>
 ): Promise<void> {
-  // Notion has no "set children" call — we list, delete each, then append.
-  // This is the documented round-trip pattern for replacing page contents.
+  // Notion has no "set children" call. We only manage the region from our
+  // sentinel marker downward: list children, find the marker, and delete from
+  // there to the end. Anything ABOVE the marker is human-authored and is left
+  // untouched. If no marker is found (a page with pre-existing content we've
+  // never synced), we delete nothing and simply append our section at the end —
+  // so a first push never destroys existing body content. `blocks` already
+  // begins with the marker (see buildPageBlocks).
   const existing = (await rateLimitedNotionCall(() =>
     notion.blocks.children.list({ block_id: pageId })
-  )) as { results: Array<{ id: string }> };
+  )) as { results: Array<{ id: string } & Record<string, unknown>> };
 
-  for (const block of existing.results) {
+  const markerIndex = existing.results.findIndex(isManagedMarkerBlock);
+  const toDelete =
+    markerIndex === -1 ? [] : existing.results.slice(markerIndex);
+
+  for (const block of toDelete) {
     await rateLimitedNotionCall(() =>
       notion.blocks.delete({ block_id: block.id })
     );
