@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { archiveUser, restoreUser, resendInvite, cancelInvite } from "@/actions/users";
+import { archiveUser, restoreUser, resendInvite, cancelInvite, getInviteLink } from "@/actions/users";
 import { toast } from "sonner";
 import InviteUserDialog from "./InviteUserDialog";
 import RoleBadge from "@/components/layout/RoleBadge";
 import { cn } from "@/lib/utils";
-import { Mail, RefreshCw, XCircle, Archive, RotateCcw, ShieldCheck } from "lucide-react";
+import { RefreshCw, XCircle, Archive, RotateCcw, ShieldCheck, Link2 } from "lucide-react";
 
 interface TeamTableProps {
   initialUsers: any[];
@@ -52,6 +52,16 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
       toast.success("Invitation resent successfully.");
     } catch (err: any) {
       toast.error(err.message || "Failed to resend invitation.");
+    }
+  };
+
+  const handleCopyLink = async (inviteId: string) => {
+    try {
+      const link = await getInviteLink(inviteId);
+      await navigator.clipboard.writeText(link);
+      toast.success("Invite link copied to clipboard.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to copy invite link.");
     }
   };
 
@@ -174,6 +184,14 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
                     <div className="flex items-center justify-end gap-3.5">
                       {isPending && (
                         <>
+                          <button
+                            onClick={() => handleCopyLink(row.id)}
+                            title="Copy invite link to share manually"
+                            className="flex items-center gap-1 text-xs font-bold text-text-secondary hover:text-text-primary transition-all bg-surface-2/40 border border-border/60 px-2.5 py-1 rounded-lg cursor-pointer"
+                          >
+                            <Link2 size={12} />
+                            Copy link
+                          </button>
                           <button
                             onClick={() => handleResend(row.id)}
                             title="Resend Invitation Email"

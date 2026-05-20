@@ -244,6 +244,25 @@ export async function cancelInvite(inviteId: string) {
   return { success: true };
 }
 
+// Returns the full accept-invite link for a pending invite so an admin can
+// share it manually (e.g. when email delivery is unavailable). Super-user/admin
+// only; we don't ship invite tokens to the client in the team list payload.
+export async function getInviteLink(inviteId: string) {
+  await requireSuperUser();
+
+  const [invite] = await db
+    .select({ token: invites.token, isAccepted: invites.isAccepted })
+    .from(invites)
+    .where(eq(invites.id, inviteId))
+    .limit(1);
+
+  if (!invite) throw new Error("Invitation not found.");
+  if (invite.isAccepted) throw new Error("This invitation was already accepted.");
+
+  const appUrl = process.env.AUTH_URL || "http://localhost:3000";
+  return `${appUrl}/accept-invite?token=${invite.token}`;
+}
+
 export async function getPendingInvites() {
   await requireAnyRole();
 

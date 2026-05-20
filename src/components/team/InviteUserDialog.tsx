@@ -49,9 +49,18 @@ export default function InviteUserDialog({ onInviteSent }: InviteUserDialogProps
       if (result.emailDelivered) {
         toast.success("Invite sent successfully.");
       } else {
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(result.invite.inviteLink);
+          copied = true;
+        } catch {
+          copied = false;
+        }
         toast.warning(
-          "Invite created, but the email could not be delivered. Copy the link from the pending invites list to share it manually.",
-          { duration: 8000 }
+          copied
+            ? "Invite created — email couldn't be delivered, so the invite link was copied to your clipboard. Share it manually."
+            : "Invite created, but the email could not be delivered. Use 'Copy link' in the pending invites list to share it manually.",
+          { duration: 9000 }
         );
       }
       onInviteSent(result.invite);
