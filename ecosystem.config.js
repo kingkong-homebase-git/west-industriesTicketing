@@ -28,6 +28,10 @@ module.exports = {
       script: "./node_modules/.bin/tsx",
       args: "scripts/sync-poll.ts",
       cwd: "/var/www/west-industries", // adjust to match the droplet path
+      // .bin/tsx is a /bin/sh shim, not JS. interpreter:"none" makes PM2 exec
+      // it directly via its shebang; without this PM2 wraps it in node and
+      // throws "SyntaxError: missing ) after argument list" on the shell code.
+      interpreter: "none",
       // fork mode is required: this is a one-shot script that runs and exits.
       // Cluster mode (Node's cluster.fork, for long-running servers sharing a
       // port) does not execute a tsx one-shot — PM2 reports it "online" but the
