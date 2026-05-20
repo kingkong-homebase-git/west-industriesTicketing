@@ -1,21 +1,23 @@
 /**
- * One-shot reconciliation for the managed-section marker (A.9).
+ * ⚠️ DANGER — DO NOT RUN --apply WITHOUT READING THIS. ⚠️
  *
- * Pages linked before A.9 carry our Description/Checklist/Comments body with NO
- * marker. Under the new push logic those pages would get a duplicate markered
- * section appended on their next push. This script fixes them once: for each
- * linked ticket it wipes the page body and rebuilds it from the DB with the
- * marker in place, so future pushes manage the section cleanly.
+ * This was written to de-duplicate pages that held our OLD machine-generated
+ * body (paragraph / "Checklist" / "Comments") before the A.9 marker existed.
+ * On 2026-05-20 the dry run revealed the linked pages instead contain rich,
+ * human-authored template content (multi-level headings, callouts, bulleted
+ * lists — 26+ blocks each). A full wipe would DESTROY that content.
  *
- * Idempotent: a page that already contains the marker is skipped.
+ * It turns out NO reconciliation is needed: A.9's push already preserves these
+ * pages. When push finds no marker it deletes nothing and appends our managed
+ * section below the existing content (see replacePageBody in src/lib/sync/push.ts).
  *
- * SAFETY: a full body wipe destroys ANY block on the page, including notes a
- * human typed. Run WITHOUT --apply first — the dry run prints every block type
- * on every page so you can confirm none of them are human content before you
- * commit to the wipe. Re-run with --apply only once you're satisfied.
+ * This script is retained only for the narrow case it was designed for — pages
+ * whose body is purely our own machine output (or empty). The guard below
+ * REFUSES to wipe any page containing block types our code never generates, so
+ * an accidental --apply cannot delete human content. Leave it that way.
  *
- *   pnpm tsx scripts/reconcile-notion-bodies.ts            # dry run (default)
- *   pnpm tsx scripts/reconcile-notion-bodies.ts --apply    # perform the wipe
+ *   pnpm exec tsx scripts/reconcile-notion-bodies.ts            # dry run (default)
+ *   pnpm exec tsx scripts/reconcile-notion-bodies.ts --apply    # guarded wipe
  */
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
@@ -26,6 +28,16 @@ import { buildPageBlocks, isManagedMarkerBlock } from "../src/lib/sync/body";
 
 const APPLY = process.argv.includes("--apply");
 const NOTION_BLOCK_APPEND_LIMIT = 100;
+
+// The only block types our own body generator (buildPageBlocks) ever emits,
+// minus the marker callout. A page whose blocks are all within this set (or
+// empty) is safe to rebuild; anything else means a human authored it and we
+// must NOT wipe it.
+const MACHINE_BLOCK_TYPES = new Set(["paragraph", "heading_2", "to_do"]);
+
+function looksHumanAuthored(blocks: { type: string }[]): boolean {
+  return blocks.some((b) => !MACHINE_BLOCK_TYPES.has(b.type));
+}
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
 const notion = new Client({ auth: process.env.NOTION_TOKEN! });
@@ -72,6 +84,7 @@ async function main() {
 
   let skipped = 0;
   let reconciled = 0;
+  let protectedHuman = 0;
 
   for (const ticket of linked) {
     const tag = `[${ticket.id.slice(0, 8)}] "${ticket.title}"`;
@@ -87,6 +100,17 @@ async function main() {
     const blockTypes = existing.map((b) => b.type).join(", ") || "(empty)";
     console.log(`  • ${tag}`);
     console.log(`      ${existing.length} existing block(s): ${blockTypes}`);
+
+    // Hard guard: never wipe a page that contains block types our generator
+    // doesn't emit — those are human-authored. This makes an accidental
+    // --apply non-destructive.
+    if (looksHumanAuthored(existing)) {
+      console.log(
+        `      🛑 contains non-machine blocks (human content) — REFUSING to wipe, skipping`
+      );
+      protectedHuman++;
+      continue;
+    }
 
     if (!APPLY) {
       console.log(`      would wipe all ${existing.length} block(s) + rebuild with marker`);
@@ -154,10 +178,14 @@ async function main() {
   }
 
   console.log(
-    `\n→ Done. ${reconciled} reconciled, ${skipped} already-markered (skipped).`
+    `\n→ Done. ${reconciled} reconciled, ${skipped} already-markered, ` +
+      `${protectedHuman} protected (human content, not touched).`
   );
-  if (!APPLY && reconciled === 0 && skipped < linked.length) {
-    console.log("  Re-run with --apply to perform the wipe + rebuild.");
+  if (protectedHuman > 0) {
+    console.log(
+      "  Protected pages keep their content; A.9's push appends our managed " +
+        "section below it on next sync — no reconciliation needed."
+    );
   }
 
   await sql.end();
