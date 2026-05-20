@@ -28,7 +28,12 @@ module.exports = {
       script: "./node_modules/.bin/tsx",
       args: "scripts/sync-poll.ts",
       cwd: "/var/www/west-industries", // adjust to match the droplet path
-      instances: 1,
+      // fork mode is required: this is a one-shot script that runs and exits.
+      // Cluster mode (Node's cluster.fork, for long-running servers sharing a
+      // port) does not execute a tsx one-shot — PM2 reports it "online" but the
+      // script never runs. Do NOT add `instances`, which can flip PM2 to
+      // cluster mode.
+      exec_mode: "fork",
       autorestart: false,
       watch: false,
       cron_restart: process.env.NOTION_POLL_CRON || "*/5 * * * *",
