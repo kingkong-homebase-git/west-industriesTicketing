@@ -33,3 +33,9 @@ export async function requireSuperUser() {
 export async function requireAnyRole() {
   return requireRole(["super_user", "admin", "team_member"]);
 }
+
+// super_user and admin can act on any ticket / user; team_member is scoped to
+// their own tickets.
+export function isPrivilegedRole(role: string): boolean {
+  return role === "super_user" || role === "admin";
+}

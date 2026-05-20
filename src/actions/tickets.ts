@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { tickets, checklistItems, comments, users } from "../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
-import { requireAnyRole, requireSuperUser } from "@/lib/require-role";
+import { requireAnyRole, isPrivilegedRole } from "@/lib/require-role";
 import {
   CreateTicketSchema,
   UpdateTicketSchema,
@@ -85,15 +85,44 @@ export async function getTicketDetail(id: string) {
   return { ticket, checklist, comments: ticketComments, assignee, allUsers };
 }
 
+// Team members may only act on tickets they own (assigned to or created by
+// them). Privileged roles (super_user/admin) may act on any ticket. Throws if a
+// team member targets someone else's ticket.
+async function assertTicketAccess(
+  ticketId: string,
+  userId: string,
+  role: string
+): Promise<void> {
+  if (isPrivilegedRole(role)) return;
+
+  const [t] = await db
+    .select({ assigneeId: tickets.assigneeId, creatorId: tickets.creatorId })
+    .from(tickets)
+    .where(eq(tickets.id, ticketId))
+    .limit(1);
+
+  if (!t) throw new Error("Ticket not found");
+  if (t.assigneeId !== userId && t.creatorId !== userId) {
+    throw new Error("Forbidden: you can only modify your own tickets");
+  }
+}
+
 // ─── Create ticket ────────────────────────────────────────────────────────────
 export async function createTicket(data: unknown) {
-  const { userId } = await requireSuperUser();
+  const { userId, role } = await requireAnyRole();
   const parsed = CreateTicketSchema.parse(data);
+
+  // Team members can only create tickets assigned to themselves; privileged
+  // roles may assign to anyone (or leave unassigned).
+  const assigneeId = isPrivilegedRole(role)
+    ? parsed.assigneeId ?? null
+    : userId;
 
   const [ticket] = await db
     .insert(tickets)
     .values({
       ...parsed,
+      assigneeId,
       creatorId: userId,
       deadline: parsed.deadline ? new Date(parsed.deadline) : null,
     })
@@ -103,18 +132,24 @@ export async function createTicket(data: unknown) {
   await pushTicketToNotion(ticket.id);
 
   revalidatePath("/tasks");
+  revalidatePath("/team-board");
   return ticket;
 }
 
 // ─── Update ticket ────────────────────────────────────────────────────────────
 export async function updateTicket(id: string, data: unknown) {
-  await requireSuperUser();
+  const { userId, role } = await requireAnyRole();
+  await assertTicketAccess(id, userId, role);
   const parsed = UpdateTicketSchema.parse(data);
+
+  // Team members cannot reassign a ticket away from themselves.
+  const { assigneeId, ...rest } = parsed;
+  const setValues = isPrivilegedRole(role) ? parsed : rest;
 
   const [ticket] = await db
     .update(tickets)
     .set({
-      ...parsed,
+      ...setValues,
       deadline: parsed.deadline ? new Date(parsed.deadline) : null,
       updatedAt: new Date(),
     })
@@ -124,12 +159,14 @@ export async function updateTicket(id: string, data: unknown) {
   debouncePush(id, () => pushTicketToNotion(id));
 
   revalidatePath("/tasks");
+  revalidatePath("/team-board");
   return ticket;
 }
 
 // ─── Update ticket status ─────────────────────────────────────────────────────
 export async function updateTicketStatus(id: string, data: unknown) {
-  await requireSuperUser();
+  const { userId, role } = await requireAnyRole();
+  await assertTicketAccess(id, userId, role);
   const parsed = UpdateStatusSchema.parse(data);
 
   const [ticket] = await db
@@ -145,12 +182,14 @@ export async function updateTicketStatus(id: string, data: unknown) {
   debouncePush(id, () => pushTicketToNotion(id));
 
   revalidatePath("/tasks");
+  revalidatePath("/team-board");
   return ticket;
 }
 
 // ─── Delete ticket ────────────────────────────────────────────────────────────
 export async function deleteTicket(id: string) {
-  await requireSuperUser();
+  const { userId, role } = await requireAnyRole();
+  await assertTicketAccess(id, userId, role);
 
   // Capture the notion_page_id before deletion so we can archive the
   // remote page after the local row is gone.
@@ -167,4 +206,5 @@ export async function deleteTicket(id: string) {
   }
 
   revalidatePath("/tasks");
+  revalidatePath("/team-board");
 }

@@ -32,7 +32,31 @@ export async function createUser(data: unknown) {
 }
 
 export async function archiveUser(userId: string) {
-  await requireSuperUser();
+  const actor = await requireSuperUser();
+
+  // Can't archive your own account.
+  if (actor.userId === userId) {
+    throw new Error("You cannot archive your own account.");
+  }
+
+  const [target] = await db
+    .select({ role: users.role, isArchived: users.isArchived })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!target) throw new Error("User not found.");
+
+  // Don't strand the workspace: keep at least one active super_user.
+  if (target.role === "super_user" && !target.isArchived) {
+    const activeSupers = await db.$count(
+      users,
+      and(eq(users.role, "super_user"), eq(users.isArchived, false))
+    );
+    if (activeSupers <= 1) {
+      throw new Error("Cannot archive the last active super user.");
+    }
+  }
 
   const [user] = await db
     .update(users)
