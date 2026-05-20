@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { users, invites } from "../../drizzle/schema";
+import { users, invites, tickets, comments } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAnyRole, requireSuperUser } from "@/lib/require-role";
 import { CreateUserSchema, InviteUserSchema, AcceptInviteSchema } from "@/lib/validations";
@@ -79,6 +79,55 @@ export async function restoreUser(userId: string) {
 
   revalidatePath("/team");
   return user;
+}
+
+// Permanently deletes a user (any state). Detaches references first so the
+// delete never fails on a foreign-key constraint, then removes the row.
+export async function deleteUser(userId: string) {
+  const actor = await requireSuperUser();
+
+  if (actor.userId === userId) {
+    throw new Error("You cannot delete your own account.");
+  }
+
+  const [target] = await db
+    .select({ role: users.role, email: users.email })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!target) throw new Error("User not found.");
+  if (target.email === "admin@westindustries.com") {
+    throw new Error("The primary admin account cannot be deleted.");
+  }
+  if (target.role === "super_user") {
+    const superUsers = await db.$count(users, eq(users.role, "super_user"));
+    if (superUsers <= 1) {
+      throw new Error("Cannot delete the last super user.");
+    }
+  }
+
+  // Detach everything that references this user, then delete. Tickets are kept
+  // (assignee/creator nulled); the user's comments stay but lose authorship;
+  // invites they sent are removed.
+  await db
+    .update(tickets)
+    .set({ assigneeId: null })
+    .where(eq(tickets.assigneeId, userId));
+  await db
+    .update(tickets)
+    .set({ creatorId: null })
+    .where(eq(tickets.creatorId, userId));
+  await db
+    .update(comments)
+    .set({ authorId: null })
+    .where(eq(comments.authorId, userId));
+  await db.delete(invites).where(eq(invites.invitedById, userId));
+
+  await db.delete(users).where(eq(users.id, userId));
+
+  revalidatePath("/team");
+  return { ok: true as const };
 }
 
 export async function getUsers(includeArchived = false) {

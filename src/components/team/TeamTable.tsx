@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { archiveUser, restoreUser, resendInvite, cancelInvite, getInviteLink } from "@/actions/users";
+import { archiveUser, restoreUser, resendInvite, cancelInvite, getInviteLink, deleteUser } from "@/actions/users";
 import { toast } from "sonner";
 import InviteUserDialog from "./InviteUserDialog";
 import RoleBadge from "@/components/layout/RoleBadge";
 import { cn } from "@/lib/utils";
-import { RefreshCw, XCircle, Archive, RotateCcw, ShieldCheck, Link2 } from "lucide-react";
+import { RefreshCw, XCircle, Archive, RotateCcw, ShieldCheck, Link2, Trash2 } from "lucide-react";
 
 interface TeamTableProps {
   initialUsers: any[];
@@ -43,6 +43,24 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
       toast.success("User restored successfully.");
     } catch (err: any) {
       toast.error(err.message || "Failed to restore user.");
+    }
+  };
+
+  const handleDelete = async (userId: string, name: string) => {
+    if (
+      !window.confirm(
+        `Permanently delete ${name}? This CANNOT be undone. Their tickets are kept but become unassigned, and any invites they sent are removed.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteUser(userId);
+      setUsers(users.filter((u) => u.id !== userId));
+      toast.success("User permanently deleted.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user.");
     }
   };
 
@@ -232,6 +250,18 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
                           Restore
                         </button>
                       )}
+
+                      {(isActive || isArchived) &&
+                        row.email !== "admin@westindustries.com" && (
+                          <button
+                            onClick={() => handleDelete(row.id, row.name)}
+                            title="Permanently delete user"
+                            className="flex items-center gap-1 text-xs font-bold text-danger hover:text-danger-hover transition-all bg-danger/10 border border-danger/30 px-2.5 py-1 rounded-lg cursor-pointer"
+                          >
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>
