@@ -12,11 +12,15 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
-import { pullAllFromNotion } from "../src/lib/sync/pull";
-
 async function main() {
   const startedAt = Date.now();
   console.log("[sync-poll] starting pull");
+
+  // Imported dynamically so dotenv.config() above runs first: notion.ts reads
+  // NOTION_TOKEN at module-eval and throws if absent. Under tsx's CJS output a
+  // static import would be hoisted above dotenv.config() and crash whenever the
+  // creds live only in .env.local (e.g. PM2, which doesn't auto-load it).
+  const { pullAllFromNotion } = await import("../src/lib/sync/pull");
 
   try {
     const result = await pullAllFromNotion();
