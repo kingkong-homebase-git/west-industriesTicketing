@@ -136,7 +136,7 @@ export async function inviteUser(data: unknown) {
   const appUrl = process.env.AUTH_URL || "http://localhost:3000";
   const inviteLink = `${appUrl}/accept-invite?token=${token}`;
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     toEmail: newInvite.email,
     inviteeName: newInvite.name,
     inviterName: inviter.name || "Administrator",
@@ -145,7 +145,7 @@ export async function inviteUser(data: unknown) {
   });
 
   revalidatePath("/team");
-  return newInvite;
+  return { ...newInvite, emailDelivered: emailResult.delivered, inviteLink };
 }
 
 export async function resendInvite(inviteId: string) {
@@ -181,7 +181,7 @@ export async function resendInvite(inviteId: string) {
   const appUrl = process.env.AUTH_URL || "http://localhost:3000";
   const inviteLink = `${appUrl}/accept-invite?token=${newToken}`;
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     toEmail: invite.email,
     inviteeName: invite.name,
     inviterName: inviter.name || "Administrator",
@@ -190,7 +190,7 @@ export async function resendInvite(inviteId: string) {
   });
 
   revalidatePath("/team");
-  return { success: true };
+  return { success: true, emailDelivered: emailResult.delivered, inviteLink };
 }
 
 export async function cancelInvite(inviteId: string) {

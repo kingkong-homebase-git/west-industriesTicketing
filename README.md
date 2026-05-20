@@ -45,6 +45,7 @@ Internal operations dashboard (v1: Tasks system). Built with Next.js 15, App Rou
 - `DATABASE_URL`: Connection string for PostgreSQL database.
 - `AUTH_SECRET`: Used to encrypt the NextAuth.js JWT.
 - `AUTH_URL`: The URL where the application is hosted (e.g., `https://dashboard.example.com`).
+- `AUTH_TRUST_HOST`: Set to `true` so Auth.js trusts the host when running on a bare IP/host or behind a proxy (required in production; otherwise `/api/auth/*` throws `UntrustedHost`).
 - `SEED_ADMIN_EMAIL`: Email for the initial `super_user`.
 - `SEED_ADMIN_PASSWORD`: Password for the initial `super_user`.
 - `NODE_ENV`: Set to `production` when deployed.
@@ -54,6 +55,11 @@ Internal operations dashboard (v1: Tasks system). Built with Next.js 15, App Rou
 - `NOTION_DATABASE_ID`: 32-hex chunk before `?v=` in the Notion database URL. Resolved internally to a primary data source ID (Notion API 2025-09-03).
 - `NOTION_SYNC_ENABLED`: Kill switch. Set to `false` to disable all push/pull. Defaults to `true`. When false, `pushTicketToNotion` and `pullAllFromNotion` no-op silently.
 - `NOTION_POLL_CRON`: Cron schedule for the PM2 sync worker (`west-industries-sync` app in `ecosystem.config.js`). Default `*/5 * * * *` (every 5 minutes).
+
+### Email (Resend)
+Invites are delivered via [Resend](https://resend.com) over HTTPS (port 443) so they work where outbound SMTP is blocked (e.g. DigitalOcean droplets block SMTP egress). Email failures are non-fatal: the invite + accept link are still created and logged.
+- `RESEND_API_KEY`: API key from `https://resend.com/api-keys`. If unset, invite emails are skipped (link still logged to the server console).
+- `EMAIL_FROM`: Sender address. Without a verified domain use `onboarding@resend.dev` (delivers only to your own Resend account email). With a verified domain: e.g. `West Industries <no-reply@yourdomain.com>`.
 
 ## Deployment (PM2 & Nginx)
 

@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 interface SendInviteEmailParams {
   toEmail: string;
@@ -8,20 +8,27 @@ interface SendInviteEmailParams {
   personalMessage?: string | null;
 }
 
-export async function sendInviteEmail({
-  toEmail,
+export interface SendEmailResult {
+  delivered: boolean;
+  error?: string;
+}
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Resend requires a verified domain to send to arbitrary recipients. Without
+// one, use "onboarding@resend.dev" (Resend's shared sender) which can only
+// deliver to your own account email — fine for testing.
+const EMAIL_FROM =
+  process.env.EMAIL_FROM || "West Industries <onboarding@resend.dev>";
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+function buildInviteHtml({
   inviteeName,
   inviterName,
   inviteLink,
   personalMessage,
-}: SendInviteEmailParams) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = parseInt(process.env.SMTP_PORT || "587");
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || `"West Industries" <no-reply@westindustries.com>`;
-
-  const htmlContent = `
+}: SendInviteEmailParams): string {
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -137,19 +144,15 @@ export async function sendInviteEmail({
               <h1>You're Invited!</h1>
               <p>Hello ${inviteeName},</p>
               <p><strong>${inviterName}</strong> has invited you to join the <strong>West Industries Workspace</strong> as a team member.</p>
-              
               ${
                 personalMessage
                   ? `<div class="message-box">"${personalMessage}"</div>`
                   : ""
               }
-              
               <p>Click the button below to accept your invitation and set up your account. This invitation link is secure and will expire in 48 hours.</p>
-              
               <div class="cta-container">
                 <a href="${inviteLink}" class="button" target="_blank">Accept Invitation</a>
               </div>
-              
               <p>Or copy and paste this link into your web browser:</p>
               <p style="word-break: break-all; font-size: 13px; color: #3b82f6;">${inviteLink}</p>
             </div>
@@ -162,36 +165,70 @@ export async function sendInviteEmail({
       </body>
     </html>
   `;
+}
 
-  // Always log the styled email locally to terminal for seamless developer visibility
+function buildInviteText({
+  inviteeName,
+  inviterName,
+  inviteLink,
+  personalMessage,
+}: SendInviteEmailParams): string {
+  return [
+    `Hello ${inviteeName},`,
+    "",
+    `${inviterName} has invited you to join the West Industries Workspace.`,
+    personalMessage ? `\nMessage: "${personalMessage}"\n` : "",
+    "Accept your invitation (link expires in 48 hours):",
+    inviteLink,
+    "",
+    "If you were not expecting this invitation, you can safely ignore this email.",
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
+}
+
+/**
+ * Sends the invite email via Resend. Never throws — returns a delivery result
+ * so callers can complete the invite flow even when email fails. Always logs
+ * the invite to the console as a fallback / audit trail.
+ */
+export async function sendInviteEmail(
+  params: SendInviteEmailParams
+): Promise<SendEmailResult> {
+  const { toEmail, inviteeName, inviteLink, personalMessage } = params;
+
+  // Always log locally so the accept link is recoverable even if delivery fails.
   console.log("\n========================================================");
-  console.log(`✉️ INVITATION SENT TO: ${toEmail}`);
+  console.log(`✉️ INVITATION FOR: ${toEmail}`);
   console.log(`👤 INVITEE NAME: ${inviteeName}`);
   console.log(`🔑 SECURE ACCEPT LINK: ${inviteLink}`);
   if (personalMessage) console.log(`💬 MESSAGE: "${personalMessage}"`);
   console.log("========================================================\n");
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    console.log("ℹ️ SMTP environment variables are not fully configured. Email was logged to console successfully.");
-    return;
+  if (!resend) {
+    console.log(
+      "ℹ️ RESEND_API_KEY not set — email not sent. Invite link logged above."
+    );
+    return { delivered: false, error: "resend_api_key_missing" };
   }
 
-  // Create transporter
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpPort === 465, // true for 465, false for other ports
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
+  try {
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: toEmail,
+      subject: "You've been invited to join West Industries",
+      html: buildInviteHtml(params),
+      text: buildInviteText(params),
+    });
 
-  // Send the email
-  await transporter.sendMail({
-    from: smtpFrom,
-    to: toEmail,
-    subject: `You've been invited to join West Industries`,
-    html: htmlContent,
-  });
+    if (error) {
+      console.error("[email] Resend returned an error:", error);
+      return { delivered: false, error: error.message };
+    }
+    return { delivered: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[email] Failed to send invite email:", message);
+    return { delivered: false, error: message };
+  }
 }

@@ -42,12 +42,19 @@ export default function InviteUserDialog({ onInviteSent }: InviteUserDialogProps
     setLoading(true);
     try {
       const invite = await inviteUser(parsed.data);
-      toast.success("Invite sent successfully.");
+      if (invite.emailDelivered) {
+        toast.success("Invite sent successfully.");
+      } else {
+        toast.warning(
+          "Invite created, but the email could not be delivered. Copy the link from the pending invites list to share it manually.",
+          { duration: 8000 }
+        );
+      }
       onInviteSent(invite);
       setOpen(false);
       setFormData({ name: "", email: "", role: "team_member", message: "" });
     } catch (err: any) {
-      toast.error(err.message || "Failed to send invitation.");
+      toast.error(err.message || "Failed to create invitation.");
     } finally {
       setLoading(false);
     }
