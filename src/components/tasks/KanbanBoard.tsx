@@ -143,13 +143,10 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
     if (!activeTicket) return;
 
     const newStatus = activeTicket.status;
-    const oldStatus = initialTickets.find((t) => t.id === activeId)?.status;
 
-    if (role !== "super_user" && newStatus !== oldStatus) {
-      toast.error("Only super users can change ticket status");
-      setTickets(initialTickets); // rollback
-      return;
-    }
+    // My Tasks only ever shows the current user's own tickets, so any move
+    // here is on a ticket they own — the server (assertTicketAccess) is the
+    // source of truth and will reject anything else.
 
     // Calculate new sort orders for the target column
     const ticketsInColumn = tickets.filter(t => t.status === newStatus);
@@ -284,7 +281,6 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
       </div>
 
       <NewTicketButton
-        role={role}
         onClick={() => {
           setSelectedTicketId(null);
           setIsCreateMode(true);

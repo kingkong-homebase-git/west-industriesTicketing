@@ -57,6 +57,13 @@ export default function SlideOver({
     }
   }, [isOpen, ticketId, isCreateMode, onClose]);
 
+  // Privileged roles act on any ticket; team members act on tickets they own.
+  const isPrivileged = role === "super_user" || role === "admin";
+  const isOwner =
+    !!data?.ticket &&
+    (data.ticket.assigneeId === userId || data.ticket.creatorId === userId);
+  const canEdit = isPrivileged || isOwner;
+
   const handleMarkStatus = async (status: "accomplished" | "failed") => {
     if (!ticketId) return;
 
@@ -155,7 +162,7 @@ export default function SlideOver({
                     <ChecklistSection
                       ticketId={data.ticket.id}
                       initialItems={data.checklist}
-                      isSuperUser={role === "super_user"}
+                      isSuperUser={canEdit}
                     />
                     <div className="h-px w-full bg-border" />
                     <CommentsSection
@@ -169,7 +176,7 @@ export default function SlideOver({
           </div>
 
           {!isCreateMode &&
-            role === "super_user" &&
+            canEdit &&
             data?.ticket?.status &&
             !DONE_STATUSES.has(data.ticket.status) && (
               <div className="p-4 border-t border-border shrink-0 bg-surface-2/20 backdrop-blur-md flex gap-2">

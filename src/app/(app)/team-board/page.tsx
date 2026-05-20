@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { tickets, users } from "../../../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import TeamKanbanBoard from "@/components/tasks/TeamKanbanBoard";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +11,9 @@ export default async function TeamBoardPage() {
   const role = ((session?.user as any)?.role as string) ?? "team_member";
   const userId = session?.user?.id ?? "";
 
-  if (role !== "super_user" && role !== "admin") {
-    redirect("/tasks");
-  }
+  // Org-wide board is visible to all roles. Editing is still scoped per ticket
+  // (see SlideOver/canEdit + server-side assertTicketAccess): team members can
+  // only modify their own tickets here.
 
   // Fetch all users
   const allUsers = await db.select().from(users).where(eq(users.isArchived, false)).orderBy(users.name);

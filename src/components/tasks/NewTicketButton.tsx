@@ -3,13 +3,12 @@
 import { Plus } from "lucide-react";
 
 interface NewTicketButtonProps {
-  role: string;
   onClick: () => void;
 }
 
-export default function NewTicketButton({ role, onClick }: NewTicketButtonProps) {
-  if (role !== "super_user") return null;
-
+export default function NewTicketButton({ onClick }: NewTicketButtonProps) {
+  // Any authenticated user can create a ticket; team members' tickets are
+  // auto-assigned to themselves server-side (see createTicket).
   return (
     <button
       onClick={onClick}

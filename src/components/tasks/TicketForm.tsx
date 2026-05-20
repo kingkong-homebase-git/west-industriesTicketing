@@ -46,13 +46,21 @@ export default function TicketForm({
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  const isSuperUser = role === "super_user";
-  const canEditFields = isSuperUser || isCreateMode;
+  // Privileged roles edit any ticket; team members edit tickets they own
+  // (assigned to or created by them). Create mode is always editable.
+  const isPrivileged = role === "super_user" || role === "admin";
+  const isOwner =
+    !!ticket && (ticket.assigneeId === userId || ticket.creatorId === userId);
+  const canEdit = isCreateMode || isPrivileged || isOwner;
+  // Only privileged roles may set the assignee; team-member tickets are pinned
+  // to the creator server-side.
+  const canEditAssignee = isPrivileged;
+  const canEditFields = canEdit;
 
   const triggerSave = async (updates: any) => {
     if (isCreateMode) return; // create mode saves explicitly
-    if (!isSuperUser) return; // team_member cant edit fields generally
-    
+    if (!canEdit) return;
+
     setIsSaving(true);
     try {
       await updateTicket(ticket.id, updates);
@@ -120,7 +128,7 @@ export default function TicketForm({
               setStatus(val);
               triggerSave({ status: val });
             }}
-            disabled={!isSuperUser}
+            disabled={!canEdit}
           >
             <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />
@@ -206,7 +214,7 @@ export default function TicketForm({
               setAssigneeId(val);
               triggerSave({ assigneeId: val === "none" ? null : val });
             }}
-            disabled={!canEditFields}
+            disabled={!canEditAssignee}
           >
             <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
               <Select.Value />

@@ -115,8 +115,15 @@ export async function inviteUser(data: unknown) {
     .where(eq(users.email, emailLower))
     .limit(1);
 
+  // Validation failures are RETURNED, not thrown: Next.js redacts thrown
+  // server-action error messages in production (the client only sees a generic
+  // "Server Components render error"), so returning a value lets the UI show
+  // the real, friendly message.
   if (existingUser[0]) {
-    throw new Error("This email is already registered as an active member.");
+    return {
+      ok: false as const,
+      error: "This email is already registered as an active member.",
+    };
   }
 
   // 3. Check for existing pending invite
@@ -128,13 +135,20 @@ export async function inviteUser(data: unknown) {
 
   if (existingInvite[0]) {
     if (existingInvite[0].isAccepted) {
-      throw new Error("This invitation has already been accepted.");
+      return {
+        ok: false as const,
+        error: "This person has already accepted an invitation.",
+      };
     }
     // If expired, clean it up so we can recreate it
     if (new Date(existingInvite[0].expiresAt) < new Date()) {
       await db.delete(invites).where(eq(invites.id, existingInvite[0].id));
     } else {
-      throw new Error("An active invitation has already been sent to this email. You can resend it instead.");
+      return {
+        ok: false as const,
+        error:
+          "An active invitation has already been sent to this email. You can resend it from the team list instead.",
+      };
     }
   }
 
@@ -169,7 +183,11 @@ export async function inviteUser(data: unknown) {
   });
 
   revalidatePath("/team");
-  return { ...newInvite, emailDelivered: emailResult.delivered, inviteLink };
+  return {
+    ok: true as const,
+    emailDelivered: emailResult.delivered,
+    invite: { ...newInvite, inviteLink },
+  };
 }
 
 export async function resendInvite(inviteId: string) {

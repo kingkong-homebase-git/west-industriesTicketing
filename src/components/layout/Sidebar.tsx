@@ -57,37 +57,39 @@ export default function Sidebar({ role }: SidebarProps) {
               </div>
             </Link>
             
+            {/* Org-wide board — visible to everyone (read-only for tickets
+                you don't own; your own stay editable). */}
+            <Link
+              href="/team-board"
+              className={cn(
+                "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+                pathname.startsWith("/team-board")
+                  ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <KanbanSquare size={18} className={pathname.startsWith("/team-board") ? "text-accent" : "text-text-secondary"} />
+                Team Tasks
+              </div>
+            </Link>
+
+            {/* User management — admins/super-users only. */}
             {(role === "super_user" || role === "admin") && (
-              <>
-                <Link
-                  href="/team-board"
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
-                    pathname.startsWith("/team-board")
-                      ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <KanbanSquare size={18} className={pathname.startsWith("/team-board") ? "text-accent" : "text-text-secondary"} />
-                    Team Tasks
-                  </div>
-                </Link>
-                <Link
-                  href="/team"
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
-                    pathname === "/team"
-                      ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <Users size={18} className={pathname === "/team" ? "text-accent" : "text-text-secondary"} />
-                    Team
-                  </div>
-                </Link>
-              </>
+              <Link
+                href="/team"
+                className={cn(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+                  pathname === "/team"
+                    ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Users size={18} className={pathname === "/team" ? "text-accent" : "text-text-secondary"} />
+                  Team
+                </div>
+              </Link>
             )}
           </div>
         </div>

@@ -41,8 +41,12 @@ export default function InviteUserDialog({ onInviteSent }: InviteUserDialogProps
 
     setLoading(true);
     try {
-      const invite = await inviteUser(parsed.data);
-      if (invite.emailDelivered) {
+      const result = await inviteUser(parsed.data);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.emailDelivered) {
         toast.success("Invite sent successfully.");
       } else {
         toast.warning(
@@ -50,7 +54,7 @@ export default function InviteUserDialog({ onInviteSent }: InviteUserDialogProps
           { duration: 8000 }
         );
       }
-      onInviteSent(invite);
+      onInviteSent(result.invite);
       setOpen(false);
       setFormData({ name: "", email: "", role: "team_member", message: "" });
     } catch (err: any) {
