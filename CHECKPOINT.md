@@ -13,7 +13,7 @@ Let's Encrypt). Notion two-way sync, the Resend email/invite system (now with a
 **verified sending domain**), team-member ticket permissions, the org-wide board,
 and user archive are all deployed and working.
 
-### origin/main = `bb48564` (droplet deployed at this commit)
+### origin/main = `6a9155e` (droplet deployed at this commit)
 Key commits this session (oldest → newest):
 - `374b690`/`770a946`/`c896540` — A.9: push preserves human Notion body content
   (managed-section marker) + guarded reconcile script (**do not run**)
@@ -88,29 +88,24 @@ pm2 save
 
 ---
 
-## Next up — three new feature requests (resume target)
+## Next up — feature requests (resume target)
 
-### 1. Permanently delete users (hard delete, any state)
-Today users can only be **archived** (soft delete). Add a true **Delete** that removes the
-user from the DB regardless of state (active *or* archived).
-- Add `deleteUser(userId)` in `src/actions/users.ts` + a **Delete** button in
-  `src/components/team/TeamTable.tsx` (confirm dialog; show for active *and* archived rows).
-- Handle foreign keys before deleting: `tickets.assignee_id` / `tickets.creator_id` and
-  `comments.author_id` reference the user — null out assignee/creator (keep the tickets;
-  comments already `set null`). Don't let the delete throw on an FK constraint.
-- **Guards (server-side):** never delete yourself, never delete the last active
-  `super_user`, keep protecting `admin@westindustries.com`.
-- Keep archive/restore as-is; Delete is the new permanent option.
+### 1. Permanently delete users (hard delete, any state) — ✅ DONE (commit `6a9155e`, deployed)
+`deleteUser(userId)` in `src/actions/users.ts` (detaches FK refs, then deletes; guards:
+not self / not last super_user / protect seed admin) + a **Delete** button on active and
+archived rows in `TeamTable`. Archive/restore unchanged.
 
-### 2. Purge the bad test invite/user data in production
-Keep only **Jono Jettoo (`justmarketme@gmail.com`)** and the **Super Admin
-(`admin@westindustries.com`)**. Remove everyone/everything else — incl.
-`enslinmarnus0@gmail.com` (Marnusq, archived), `william.alexander.mcdonald@gmail.com`
-(archived), `perseverancezengele08@gmail.com` (pending Admin invite), and any other stale
-rows in `users` and `invites`.
-- Use the new hard-delete UI **and** clear leftover `invites` rows (pending/expired) so no
-  orphaned invites remain.
-- **Take a `pg_dump` backup first** — irreversible.
+### 2. Purge the bad test invite/user data in production — ⏳ IN PROGRESS (not yet executed)
+Backup taken: `/tmp/west_industries_backup_20260520_181354.sql` (⚠️ in `/tmp` — move to
+`/root/` or re-dump before the pending reboot if you want to keep it). **No deletes run yet.**
+Keep only **Jono (`justmarketme@gmail.com`, now an active user)** and **admin
+(`admin@westindustries.com`)**. Delete these archived users via the UI Delete button:
+`enslinmarnus0@gmail.com` (Marnusq), `perseverancezengele08@gmail.com` (now an archived
+user), `william.alexander.mcdonald@gmail.com`. Then clear leftover invites:
+```bash
+sudo -u postgres psql -d west_industries -c "DELETE FROM invites WHERE email <> 'justmarketme@gmail.com';"
+```
+Verify: users = admin + justmarketme only; invites = justmarketme only.
 
 ### 3. Mobile-first responsive redesign + collapsible side panel
 UI is currently desktop-only. Rework mobile-first while keeping desktop polished.
