@@ -107,25 +107,48 @@ sudo -u postgres psql -d west_industries -c "DELETE FROM invites WHERE email <> 
 ```
 Verify: users = admin + justmarketme only; invites = justmarketme only.
 
-### 3. Mobile-first responsive redesign + collapsible side panel
-UI is currently desktop-only. Rework mobile-first while keeping desktop polished.
-- **Sidebar:** collapse/minimize toggle on **desktop** (icon-only rail ⇄ full) + a
-  **hamburger drawer** on **mobile** (off-canvas overlay, closes on nav). Persist the
-  desktop collapsed state.
-- **Layout:** mobile-first breakpoints throughout — header/stat cards, Kanban, Team table,
-  slide-over all reflow cleanly on small screens.
-- **Kanban:** usable on mobile (horizontal scroll/snap); ensure `@dnd-kit` drag works with
-  touch (PointerSensor + appropriate `touch-action`).
-- **Team table → cards on mobile** so actions stay reachable.
-- **Slide-over / dialogs:** full-width / bottom-sheet on mobile.
-- Keep the glassmorphism look; don't regress desktop.
+### 3. Build a real, *unique* Dashboard (`src/app/(app)/dashboard/page.tsx`) — flagship
+Currently a "🚀 coming soon" stub. Make it a **command-center / analytics overview** with its
+own visual language — NOT another Kanban. Sexy + actually useful:
+- Hero KPI row w/ animated counters: active, overdue, due this week, completion rate.
+- Charts (`recharts`): status-distribution donut, weekly throughput, workload-by-assignee bar.
+- "My Focus" panel (signed-in user's open tickets, overdue, next deadline).
+- Upcoming deadlines (next 7 days, org-wide) timeline.
+- Recent activity feed (ticket updates / status moves / comments — `updated_at`, comments, `sync_logs`).
+- Sync-health tile (last pull time+status, push/pull counts from `sync_state`+`sync_logs`; link to /admin/sync-logs).
+- Team snapshot (active members, pending invites).
+- Role-aware (admin/super = org-wide; team_member = personal). Bento-grid, glassmorphism, motion, responsive.
 
-**Guardrails:** hard delete + the purge are destructive/irreversible — **backup first**.
-Each change: typecheck + lint + test, commit, deploy via the recipe.
+### 4. Mobile-first responsive + collapsible sidebar (whole app)
+- Sidebar: desktop collapse toggle (icon rail ⇄ full, persist) + mobile hamburger drawer
+  (off-canvas, closes on nav).
+- Reflow header/KPIs, Kanban (touch DnD: PointerSensor + `touch-action`), Team table → cards
+  on mobile, slide-over/dialogs → full-width/bottom-sheet. No desktop regression.
 
-Suggested order: #1 (hard delete) → use it for #2's cleanup → then #3 (mobile) as its own pass.
+### 5. Password reset / "forgot password"
+No self-serve reset exists. Add: "Forgot password" on `/login` → time-limited reset link via
+Resend → set-new-password page → sign in. Mirror the invite-token pattern; friendly `{ok,error}`.
+
+### 6. Notifications via Resend
+- "You've been assigned a ticket" email on assignment.
+- Deadline reminders: daily PM2 cron (reuse `west-industries-sync` pattern + a `scripts/…ts`)
+  emailing assignees about tickets due within 24–48h; stamp a "reminded" field to dedupe.
+
+### 7. Polish
+- Make `resendInvite` + `acceptInvite` return friendly `{ok,error}` like `inviteUser`.
+- Give the empty-title Notion page a title or archive it.
+
+### 8. (OPTIONAL — LAST, only on explicit request) Move Resend to a work-owned account
+Re-verify `westindustriesintl.com` under a work account, swap the API key in `.env.local`.
+Do NOT do this unless explicitly asked.
+
+**Guardrails:** #1 purge is destructive — backup first (done, at `/root/`). Each change:
+typecheck + lint + test → commit → deploy via the recipe. Never build on Windows.
+Suggested order: 1 → 2(Dashboard) → wait, renumber: **purge → Dashboard(#3) → mobile(#4) →
+password reset(#5) → notifications(#6) → polish(#7)**, with #8 only on request.
 
 ---
 
 ## How to resume
-Say "resume from CHECKPOINT.md". Then start at feature #1 (hard delete).
+Say "resume from CHECKPOINT.md". Current build pass: purge → Dashboard → mobile → password
+reset → notifications → polish (work-owned Resend account last, only if asked).
