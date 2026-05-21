@@ -89,30 +89,15 @@ pm2 save
 ---
 
 ## Done recently
-- ✅ Hard-delete users (`6a9155e`), unique **Dashboard** (`969380f`), mobile shell v1:
-  collapsible sidebar + drawer (`83c0510`).
+- ✅ Hard-delete users (`6a9155e`), unique **Dashboard** (`969380f`), mobile shell v1 (`83c0510`).
+- ✅ **A** self-serve tickets (assignee hidden for team members) + **B** mobile overhaul
+  (compact KPIs, TouchSensor drag, Team table → cards) — `1b487e0`.
+- ✅ **C** Hemisphere rebrand + custom logo/favicon — `63ebe3d`.
+  - ⚠️ On the droplet, update the `EMAIL_FROM` *display name* to Hemisphere when convenient:
+    `sed -i 's|^EMAIL_FROM=.*|EMAIL_FROM="Hemisphere <no-reply@westindustriesintl.com>"|' .env.local`
+    then restart. (Sending domain stays westindustriesintl.com.)
 
 ## Next up — current build pass (resume target)
-
-### A. Team-member self-serve tickets — hide assignee in create (quick unblock)
-Team members are blocked creating tickets (assignee step). In `TicketForm`, hide the Assignee
-field for non-privileged users in **create mode** (don't render a disabled control); server
-already forces `assigneeId = self` (`createTicket`). Privileged keep the picker. Verify with a
-real team_member: create → succeeds → appears in My Tasks.
-
-### B. Mobile overhaul — make it genuinely good (feels too "zoomed in" now)
-- Density: smaller padding/font/card heights on mobile; My Tasks KPI cards are huge → compact
-  (tight 2×2 or slim scrollable stat strip); scale type down a step at `sm`.
-- Kanban touch DnD: `touch-action` on cards + `@dnd-kit` TouchSensor/activation tuning (drag vs scroll).
-- Team table → **card stacks** on mobile (keep table on desktop).
-- Tap targets ≥40px, no horizontal overflow, dialogs/slide-over as bottom-sheets.
-
-### C. Rebrand to "Hemisphere" + custom logo (UI/product name only)
-Replace visible "West Industries" → **Hemisphere** with a distinctive SVG logo (hemisphere /
-half-globe, gradient, glow, works in both themes + favicon): header, sidebar (rail + drawer),
-login/accept-invite, `<title>`/metadata, invite email template (`src/lib/email.ts`) + `EMAIL_FROM`
-display name. **Leave infra unchanged** (domain `westindustriesintl.com`, `admin@westindustries.com`,
-Notion DB, env vars) — UI rename only.
 
 ### D. Light / Dark mode toggle (header)
 Add light theme tokens (premium, not flat) alongside the dark ones in `globals.css`; sun/moon
