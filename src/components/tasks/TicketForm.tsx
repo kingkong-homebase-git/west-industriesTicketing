@@ -98,24 +98,42 @@ export default function TicketForm({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div>
-        {canEditFields ? (
+      {isCreateMode ? (
+        // In create mode, render a clearly labelled, bordered input so users
+        // (especially on mobile) know to type a title — the borderless heading
+        // style read as a static placeholder and got skipped.
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+            Title <span className="text-danger">*</span>
+          </label>
           <input
             value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-              saveTimeoutRef.current = setTimeout(() => {
-                if (e.target.value.trim()) triggerSave({ title: e.target.value });
-              }, 600);
-            }}
-            placeholder="Ticket title..."
-            className="w-full text-xl font-bold bg-transparent border-none outline-none focus:ring-0 placeholder-text-secondary/50 text-text-primary"
+            autoFocus
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What needs to be done?"
+            className="w-full bg-surface-2/40 border border-border/60 text-text-primary rounded-xl px-3.5 py-2.5 text-base font-semibold focus:outline-none focus:border-accent hover:border-accent/60 transition-all"
           />
-        ) : (
-          <h2 className="text-xl font-bold text-text-primary">{title}</h2>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div>
+          {canEditFields ? (
+            <input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = setTimeout(() => {
+                  if (e.target.value.trim()) triggerSave({ title: e.target.value });
+                }, 600);
+              }}
+              placeholder="Ticket title..."
+              className="w-full text-xl font-bold bg-transparent border-none outline-none focus:ring-0 placeholder-text-secondary/50 text-text-primary"
+            />
+          ) : (
+            <h2 className="text-xl font-bold text-text-primary">{title}</h2>
+          )}
+        </div>
+      )}
 
       {/* Meta Grid */}
       <div className="grid grid-cols-2 gap-4 border-y border-border py-4">

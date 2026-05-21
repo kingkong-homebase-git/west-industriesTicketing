@@ -47,11 +47,15 @@ export default async function TeamBoardPage() {
     if (row.done) progressMap[row.ticketId].done++;
   }
 
-  const ticketsWithMeta = allRows.map((r) => ({
-    ...r.ticket,
-    assigneeName: r.assigneeName ?? null,
-    checklistProgress: progressMap[r.ticket.id] ?? { done: 0, total: 0 },
-  }));
+  // Team board shows active (non-closed) work only — hide accomplished/failed.
+  const CLOSED = new Set(["accomplished", "failed"]);
+  const ticketsWithMeta = allRows
+    .filter((r) => !CLOSED.has(r.ticket.status))
+    .map((r) => ({
+      ...r.ticket,
+      assigneeName: r.assigneeName ?? null,
+      checklistProgress: progressMap[r.ticket.id] ?? { done: 0, total: 0 },
+    }));
 
   return (
     <TeamKanbanBoard

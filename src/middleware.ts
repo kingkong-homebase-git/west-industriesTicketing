@@ -16,10 +16,12 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  // Team page: super_user or admin only
+  // Team management page (/team) is super_user/admin only. NOTE: must NOT match
+  // /team-board (the org-wide board, open to all roles) — so check exact path,
+  // not startsWith("/team").
   const role = (session?.user as any)?.role;
   if (
-    nextUrl.pathname.startsWith("/team") &&
+    (nextUrl.pathname === "/team" || nextUrl.pathname.startsWith("/team/")) &&
     role !== "super_user" &&
     role !== "admin"
   ) {
