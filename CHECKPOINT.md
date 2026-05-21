@@ -99,12 +99,13 @@ pm2 save
 
 ## Next up — current build pass (resume target)
 
-### D. Light / Dark mode toggle (header)
-Add light theme tokens (premium, not flat) alongside the dark ones in `globals.css`; sun/moon
-toggle in the header; persist + respect system pref; no flash on load (`next-themes` or manual
-`data-theme` + localStorage). Ensure glass/dashboard/charts/bg image read well in both.
+### ✅ D. Light / Dark mode toggle — DONE (`2a77a39` + polish `1ddd69c`)
+next-themes class strategy; `:root` light / `.dark` dark sunset palettes; theme-aware header
+(`--header`) + app background (mountain via `--bg-image-opacity`/`--app-overlay`); sun/moon
+toggle in header; stronger borders both modes. Real Hemisphere logo (PNG) + wordmark gradient
+also done (`7561926`/`7292789`). Bug fixes: team-board middleware + create-title (`a89a94d`).
 
-### E. Password reset / "forgot password"
+### E. Password reset / "forgot password"  ← NEXT (needs a DB migration)
 No self-serve reset exists. "Forgot password" on `/login` → time-limited reset link via Resend →
 set-new-password page → sign in. Mirror the invite-token pattern; friendly `{ok,error}`.
 
