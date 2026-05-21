@@ -32,7 +32,7 @@ export default async function AppLayout({
       <div 
         className="absolute inset-0 z-0 backdrop-blur-[1px] pointer-events-none" 
         style={{
-          backgroundColor: "rgba(5, 7, 13, 0.55)"
+          backgroundColor: "rgba(10, 7, 7, 0.62)"
         }}
       />
       

@@ -54,7 +54,7 @@ function buildInviteHtml({
             max-width: 580px;
             margin: 0 auto;
             background: rgba(17, 24, 39, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(249, 115, 22, 0.2);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -70,10 +70,10 @@ function buildInviteHtml({
             font-weight: 800;
             color: #ffffff;
             letter-spacing: -0.025em;
-            text-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+            text-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
           }
           .logo-accent {
-            color: #3b82f6;
+            color: #f97316;
           }
           .content {
             padding: 40px 32px;
@@ -95,7 +95,7 @@ function buildInviteHtml({
           }
           .message-box {
             background: rgba(255, 255, 255, 0.03);
-            border-left: 3px solid #3b82f6;
+            border-left: 3px solid #f97316;
             border-radius: 4px;
             padding: 16px;
             margin: 24px 0;
@@ -108,14 +108,14 @@ function buildInviteHtml({
           }
           .button {
             display: inline-block;
-            background-color: #3b82f6;
+            background-color: #f97316;
             color: #ffffff !important;
             font-weight: 600;
             font-size: 15px;
             padding: 14px 32px;
             text-decoration: none;
             border-radius: 8px;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
             transition: all 0.2s ease;
           }
           .footer {
@@ -127,7 +127,7 @@ function buildInviteHtml({
             color: #4b5563;
           }
           .footer a {
-            color: #3b82f6;
+            color: #f97316;
             text-decoration: none;
           }
         </style>
@@ -154,7 +154,7 @@ function buildInviteHtml({
                 <a href="${inviteLink}" class="button" target="_blank">Accept Invitation</a>
               </div>
               <p>Or copy and paste this link into your web browser:</p>
-              <p style="word-break: break-all; font-size: 13px; color: #3b82f6;">${inviteLink}</p>
+              <p style="word-break: break-all; font-size: 13px; color: #f97316;">${inviteLink}</p>
             </div>
             <div class="footer">
               This invitation was sent by <a href="${process.env.AUTH_URL || "http://localhost:3000"}">Hemisphere</a>.<br>

@@ -248,7 +248,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Active" value={kpis.active} icon={<CircleDot size={16} />} accent="#3b82f6" hint="Open tickets" />
+        <Kpi label="Active" value={kpis.active} icon={<CircleDot size={16} />} accent="#f97316" hint="Open tickets" />
         <Kpi label="Overdue" value={kpis.overdue} icon={<Flame size={16} />} accent="#f43f5e" hint="Past deadline" />
         <Kpi label="Due this week" value={kpis.dueThisWeek} icon={<AlarmClock size={16} />} accent="#f59e0b" hint="Next 7 days" />
         <Kpi label="Completion" value={kpis.completionRate} suffix="%" icon={<Gauge size={16} />} accent="#10b981" hint="Accomplished / total" />

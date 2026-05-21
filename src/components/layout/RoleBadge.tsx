@@ -12,7 +12,7 @@ export default function RoleBadge({ role }: RoleBadgeProps) {
       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border"
       style={{
         background: isSuperUser 
-          ? "rgba(59,130,246,0.15)" 
+          ? "rgba(249,115,22,0.15)" 
           : isAdmin 
             ? "rgba(6,182,212,0.15)" 
             : "rgba(139,144,167,0.1)",
@@ -22,7 +22,7 @@ export default function RoleBadge({ role }: RoleBadgeProps) {
             ? "#06b6d4" 
             : "var(--text-secondary)",
         borderColor: isSuperUser 
-          ? "rgba(59,130,246,0.3)" 
+          ? "rgba(249,115,22,0.3)" 
           : isAdmin 
             ? "rgba(6,182,212,0.3)" 
             : "rgba(139,144,167,0.2)",

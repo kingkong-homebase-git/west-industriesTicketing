@@ -191,7 +191,7 @@ export default function ChecklistSection({
       {items.length > 0 && (
         <div className="w-full bg-surface/20 h-1.5 rounded-full overflow-hidden">
           <div
-            className="bg-accent h-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+            className="bg-accent h-full transition-all duration-300 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
             style={{ width: `${progress}%` }}
           />
         </div>

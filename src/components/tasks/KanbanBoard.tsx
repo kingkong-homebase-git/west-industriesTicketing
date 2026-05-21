@@ -209,7 +209,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
     <div className="h-full flex flex-col gap-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Tasks */}
-        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-text-primary">Total Task</span>
             <span className="text-xs font-medium bg-accent/20 text-accent px-2 py-1 rounded-full">All</span>
@@ -219,7 +219,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
         </div>
 
         {/* Overdue */}
-        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-text-primary">Overdue Task</span>
             <span className="text-xs font-medium bg-danger/20 text-danger px-2 py-1 rounded-full">Late</span>
@@ -229,7 +229,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
         </div>
 
         {/* On Track */}
-        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-text-primary">On Track</span>
             <span className="text-xs font-medium bg-warning/20 text-warning px-2 py-1 rounded-full">Active</span>
@@ -239,7 +239,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
         </div>
 
         {/* Accomplished */}
-        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300">
+        <div className="bg-surface/30 backdrop-blur-md border border-border/60 p-3 sm:p-5 rounded-2xl shadow-xl flex flex-col gap-1.5 sm:gap-3 hover:border-accent/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)] transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-text-primary">Accomplished</span>
             <span className="text-xs font-medium bg-success/20 text-success px-2 py-1 rounded-full">Done</span>

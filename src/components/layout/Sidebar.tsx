@@ -57,7 +57,7 @@ export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggle
           "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
           !showLabel && "justify-center",
           active
-            ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] font-semibold"
+            ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_15px_rgba(249,115,22,0.15)] font-semibold"
             : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
         )}
       >

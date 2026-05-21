@@ -222,7 +222,7 @@ function AcceptInviteContent() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-accent hover:bg-accent-hover text-white py-2.5 rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-accent hover:bg-accent-hover text-white py-2.5 rounded-xl text-sm font-semibold transition-all shadow-[0_4px_14px_rgba(249,115,22,0.3)] hover:shadow-[0_4px_20px_rgba(249,115,22,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <>

@@ -223,7 +223,7 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
                         {row.name}
                       </span>
                       {row.email === "admin@westindustries.com" && (
-                        <ShieldCheck size={14} className="text-accent filter drop-shadow-[0_0_4px_rgba(59,130,246,0.4)]" />
+                        <ShieldCheck size={14} className="text-accent filter drop-shadow-[0_0_4px_rgba(249,115,22,0.4)]" />
                       )}
                     </div>
                   </td>

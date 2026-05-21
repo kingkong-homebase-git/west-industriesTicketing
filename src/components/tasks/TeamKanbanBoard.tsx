@@ -46,7 +46,7 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
             return (
               <div
                 key={col.id}
-                className="w-80 flex flex-col bg-surface/10 backdrop-blur-md rounded-2xl border border-border/60 shrink-0 max-h-full hover:border-accent/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] transition-all duration-300"
+                className="w-80 flex flex-col bg-surface/10 backdrop-blur-md rounded-2xl border border-border/60 shrink-0 max-h-full hover:border-accent/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)] transition-all duration-300"
               >
                 <div className="p-3.5 border-b border-border/40 flex items-center justify-between sticky top-0 bg-white/2 backdrop-blur-md z-10 rounded-t-2xl">
                   <div className="flex items-center gap-3">

@@ -97,7 +97,7 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
         <button
           type="submit"
           disabled={!body.trim() || isSubmitting}
-          className="absolute bottom-4 right-3 w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+          className="absolute bottom-4 right-3 w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(249,115,22,0.3)]"
         >
           <Send size={14} />
         </button>
