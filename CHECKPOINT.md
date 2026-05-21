@@ -105,11 +105,16 @@ next-themes class strategy; `:root` light / `.dark` dark sunset palettes; theme-
 toggle in header; stronger borders both modes. Real Hemisphere logo (PNG) + wordmark gradient
 also done (`7561926`/`7292789`). Bug fixes: team-board middleware + create-title (`a89a94d`).
 
-### E. Password reset / "forgot password"  ← NEXT (needs a DB migration)
-No self-serve reset exists. "Forgot password" on `/login` → time-limited reset link via Resend →
-set-new-password page → sign in. Mirror the invite-token pattern; friendly `{ok,error}`.
+### ✅ E. Password reset — DONE & LIVE (`6c0bf08`)
+`password_resets` table (migration `0002`), request/validate/reset actions (friendly
+`{ok,error}`, generic response, 1h single-use tokens), Resend reset email, `/forgot-password`
++ `/reset-password` pages, "Forgot password?" on login, both routes public in middleware.
+⚠️ **Migration ownership lesson:** the table was first created via `sudo -u postgres` so it was
+owned by `postgres` → app (`west_admin`) got `permission denied`. Fixed with
+`ALTER TABLE password_resets OWNER TO west_admin;`. **For any future migration: apply as
+`west_admin` OR `ALTER TABLE … OWNER TO west_admin` afterward.**
 
-### F. Notifications via Resend
+### F. Notifications via Resend — DEFERRED (not built)
 - "You've been assigned a ticket" email on assignment.
 - Deadline reminders: daily PM2 cron (reuse `west-industries-sync` pattern + a `scripts/…ts`)
   emailing assignees about tickets due within 24–48h; stamp a "reminded" field to dedupe.
