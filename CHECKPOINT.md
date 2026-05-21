@@ -125,6 +125,15 @@ owned by `postgres` → app (`west_admin`) got `permission denied`. Fixed with
   pending — backup at `/root/`. SQL: `DELETE FROM invites WHERE email <> 'justmarketme@gmail.com';`
 - (LAST, only if asked) move Resend to a work-owned account.
 
+### Backups (ops)
+- ✅ **Daily on-droplet backup** — `/root/backup-db.sh` (gzip, 14-day retention) via root cron 02:15.
+- **Off-server → DigitalOcean Spaces** via rclone (`dospaces:hemisphere-backups/db`, 30-day
+  remote retention) — steps provided; **verify it's listing in Spaces** (`rclone ls dospaces:hemisphere-backups/db`).
+- Future: was discussed but not done — the rest of off-site DR if droplet dies.
+
+### Product overview doc
+- `docs/OVERVIEW.md` — plain-English description of what Hemisphere is/does (for a PDF/marketing).
+
 **Guardrails:** typecheck + lint + test → commit → deploy. Never build on Windows.
 **Order:** A (quick) → B (mobile) → C (rebrand) → D (theme) → E (password reset) → F (notifications).
 
