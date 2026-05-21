@@ -19,22 +19,16 @@ export default async function AppLayout({
   return (
     <div className="relative flex h-screen overflow-hidden bg-background">
       {/* Background Image with Premium Atmospheric Glassmorphism Overlay */}
-      <div 
-        className="absolute inset-0 z-0 pointer-events-none"
+      <div
+        className="app-bg-image absolute inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: "url('/mountiankanban.jpeg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          opacity: 0.40,
         }}
       />
-      <div 
-        className="absolute inset-0 z-0 backdrop-blur-[1px] pointer-events-none" 
-        style={{
-          backgroundColor: "rgba(10, 7, 7, 0.62)"
-        }}
-      />
+      <div className="app-bg-overlay absolute inset-0 z-0 backdrop-blur-[1px] pointer-events-none" />
       
       <AppShell role={user.role} user={user}>
         {children}

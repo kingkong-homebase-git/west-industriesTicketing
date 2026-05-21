@@ -183,7 +183,7 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-text-primary">
       {/* Table Sub-header */}
       <div className="p-4 border-b border-border/40 flex justify-between items-center bg-surface-2/10 backdrop-blur-md">
         <div className="text-sm font-medium text-text-secondary">

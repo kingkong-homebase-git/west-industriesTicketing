@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react";
 import RoleBadge from "./RoleBadge";
 import { BrandLogo } from "@/components/brand/Logo";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import { LogOut, Menu } from "lucide-react";
 
 interface HeaderProps {
@@ -37,6 +38,7 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
 
       {/* User info */}
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <span className="text-sm text-text-secondary hidden sm:block">
           {user.name}
         </span>

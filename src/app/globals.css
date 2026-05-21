@@ -1,6 +1,24 @@
 @import "tailwindcss";
 
+/* Light theme (default). Warm sunset-tinted neutrals. */
 :root {
+  --background: #fbf4ee;
+  --surface: #fffaf5;
+  --surface-2: #f3e7dc;
+  --border: rgba(234, 88, 12, 0.28);
+  --text-primary: #2a1c14;
+  --text-secondary: #7c6555;
+  --accent: #ea580c;
+  --accent-hover: #f97316;
+  --danger: #e11d48;
+  --warning: #d97706;
+  --success: #059669;
+  --app-overlay: rgba(251, 244, 238, 0.84);
+  --bg-image-opacity: 0.12;
+}
+
+/* Dark theme (warm sunset). */
+.dark {
   --background: #0a0707;
   --surface: #1a1310;
   --surface-2: #241914;
@@ -12,6 +30,8 @@
   --danger: #f43f5e;
   --warning: #f59e0b;
   --success: #10b981;
+  --app-overlay: rgba(10, 7, 7, 0.62);
+  --bg-image-opacity: 0.4;
 }
 
 @theme inline {
@@ -63,4 +83,12 @@ body {
 .kanban-col-scroll {
   overflow-y: auto;
   max-height: calc(100vh - 200px);
+}
+
+/* Theme-aware app background (mountain image + tint overlay) */
+.app-bg-image {
+  opacity: var(--bg-image-opacity);
+}
+.app-bg-overlay {
+  background-color: var(--app-overlay);
 }
