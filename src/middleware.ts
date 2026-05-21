@@ -8,6 +8,8 @@ export default auth((req) => {
   const isPublic =
     nextUrl.pathname.startsWith("/login") ||
     nextUrl.pathname.startsWith("/accept-invite") ||
+    nextUrl.pathname.startsWith("/forgot-password") ||
+    nextUrl.pathname.startsWith("/reset-password") ||
     nextUrl.pathname.startsWith("/api/auth");
 
   if (isPublic) return NextResponse.next();

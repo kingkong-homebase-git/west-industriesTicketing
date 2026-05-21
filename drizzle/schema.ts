@@ -176,6 +176,24 @@ export const invitesRelations = relations(invites, ({ one }) => ({
   }),
 }));
 
+// ─── Password Resets ────────────────────────────────────────────────────────
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").unique().notNull(),
+    used: boolean("used").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("password_resets_token_idx").on(t.token)]
+);
+
 // ─── Sync Logs ────────────────────────────────────────────────────────────────
 export const syncLogs = pgTable(
   "sync_logs",

@@ -1,14 +1,20 @@
 "use server";
 
 import { db } from "@/db";
-import { users, invites, tickets, comments } from "../../drizzle/schema";
+import { users, invites, tickets, comments, passwordResets } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAnyRole, requireSuperUser } from "@/lib/require-role";
-import { CreateUserSchema, InviteUserSchema, AcceptInviteSchema } from "@/lib/validations";
+import {
+  CreateUserSchema,
+  InviteUserSchema,
+  AcceptInviteSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from "@/lib/validations";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
-import { sendInviteEmail } from "@/lib/email";
+import { sendInviteEmail, sendPasswordResetEmail } from "@/lib/email";
 
 // ─── Native User Actions ──────────────────────────────────────────────────────
 export async function createUser(data: unknown) {
@@ -388,4 +394,79 @@ export async function acceptInvite(data: unknown) {
 
   revalidatePath("/team");
   return newUser;
+}
+
+// ─── Password reset ───────────────────────────────────────────────────────────
+export async function requestPasswordReset(data: unknown) {
+  const parsed = ForgotPasswordSchema.parse(data);
+  const email = parsed.email.toLowerCase();
+
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      isArchived: users.isArchived,
+    })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  // Only send for active accounts — but ALWAYS return the same generic result
+  // so we never reveal whether an email is registered.
+  if (user && !user.isArchived) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+
+    const appUrl = process.env.AUTH_URL || "http://localhost:3000";
+    await sendPasswordResetEmail({
+      toEmail: user.email,
+      name: user.name,
+      resetLink: `${appUrl}/reset-password?token=${token}`,
+    });
+  }
+
+  return { ok: true as const };
+}
+
+export async function validateResetToken(token: string) {
+  const [row] = await db
+    .select()
+    .from(passwordResets)
+    .where(eq(passwordResets.token, token))
+    .limit(1);
+
+  if (!row) return { valid: false as const, reason: "Invalid or unknown reset link." };
+  if (row.used) return { valid: false as const, reason: "This reset link has already been used." };
+  if (new Date(row.expiresAt) < new Date())
+    return { valid: false as const, reason: "This reset link has expired." };
+
+  return { valid: true as const };
+}
+
+export async function resetPassword(data: unknown) {
+  const parsed = ResetPasswordSchema.parse(data);
+
+  const [row] = await db
+    .select()
+    .from(passwordResets)
+    .where(eq(passwordResets.token, parsed.token))
+    .limit(1);
+
+  if (!row) return { ok: false as const, error: "Invalid or unknown reset link." };
+  if (row.used) return { ok: false as const, error: "This reset link has already been used." };
+  if (new Date(row.expiresAt) < new Date())
+    return { ok: false as const, error: "This reset link has expired." };
+
+  const passwordHash = await bcrypt.hash(parsed.password, 12);
+  await db.update(users).set({ passwordHash }).where(eq(users.id, row.userId));
+
+  // Burn this token and any other outstanding tokens for the user.
+  await db
+    .update(passwordResets)
+    .set({ used: true })
+    .where(eq(passwordResets.userId, row.userId));
+
+  return { ok: true as const };
 }

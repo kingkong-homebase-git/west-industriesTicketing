@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { z } from "zod";
+import Link from "next/link";
 import { HemisphereMark } from "@/components/brand/Logo";
 
 const LoginSchema = z.object({
@@ -131,6 +132,14 @@ export default function LoginPage() {
               {errors.password && (
                 <p className="text-xs text-danger">{errors.password}</p>
               )}
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-accent hover:text-accent-hover hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <button
