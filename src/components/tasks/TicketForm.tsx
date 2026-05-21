@@ -205,7 +205,9 @@ export default function TicketForm({
           </Select.Root>
         </div>
 
-        {/* Assignee */}
+        {/* Assignee — privileged only; team-member tickets auto-assign to self
+            server-side, so we hide the picker for them in create mode. */}
+        {(isPrivileged || !isCreateMode) && (
         <div className="space-y-1">
           <label className="text-xs text-text-secondary font-medium">Assignee</label>
           <Select.Root
@@ -245,6 +247,7 @@ export default function TicketForm({
             </Select.Portal>
           </Select.Root>
         </div>
+        )}
 
         {/* Deadline */}
         <div className="space-y-1">

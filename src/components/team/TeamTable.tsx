@@ -121,6 +121,67 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
 
   const totalMembers = combinedRows.length;
 
+  const statusBadge = (status: "active" | "archived" | "pending") => {
+    if (status === "archived")
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-danger/10 border border-danger/20 text-danger">
+          Archived
+        </span>
+      );
+    if (status === "active")
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-success/15 border border-success/30 text-success shadow-[0_0_10px_rgba(34,197,94,0.05)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+          Active
+        </span>
+      );
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/15 border border-warning/30 text-warning">
+        Pending Invite
+      </span>
+    );
+  };
+
+  const rowActions = (row: (typeof combinedRows)[number]) => {
+    const isArchived = row.status === "archived";
+    const isPending = row.status === "pending";
+    const isActive = row.status === "active";
+    const protectedAdmin = row.email === "admin@westindustries.com";
+    const btn = "flex items-center gap-1 text-xs font-bold transition-all px-2.5 py-1.5 rounded-lg cursor-pointer border";
+    return (
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        {isPending && (
+          <>
+            <button onClick={() => handleCopyLink(row.id)} title="Copy invite link" className={cn(btn, "text-text-secondary hover:text-text-primary bg-surface-2/40 border-border/60")}>
+              <Link2 size={12} /> Copy link
+            </button>
+            <button onClick={() => handleResend(row.id)} title="Resend invitation email" className={cn(btn, "text-accent hover:text-accent-hover bg-accent/10 border-accent/20")}>
+              <RefreshCw size={12} /> Resend
+            </button>
+            <button onClick={() => handleCancelInvite(row.id)} title="Cancel invitation" className={cn(btn, "text-danger hover:text-danger-hover bg-danger/10 border-danger/20")}>
+              <XCircle size={12} /> Cancel
+            </button>
+          </>
+        )}
+        {isActive && !protectedAdmin && (
+          <button onClick={() => handleArchive(row.id)} title="Archive user" className={cn(btn, "text-danger hover:text-danger-hover bg-danger/10 border-danger/20")}>
+            <Archive size={12} /> Archive
+          </button>
+        )}
+        {isArchived && (
+          <button onClick={() => handleRestore(row.id)} title="Restore user" className={cn(btn, "text-success hover:text-success-hover bg-success/10 border-success/20")}>
+            <RotateCcw size={12} /> Restore
+          </button>
+        )}
+        {(isActive || isArchived) && !protectedAdmin && (
+          <button onClick={() => handleDelete(row.id, row.name)} title="Permanently delete user" className={cn(btn, "text-danger hover:text-danger-hover bg-danger/10 border-danger/30")}>
+            <Trash2 size={12} /> Delete
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full text-white">
       {/* Table Sub-header */}
@@ -131,8 +192,8 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
         <InviteUserDialog onInviteSent={(newInvite) => setInvites([...invites, newInvite])} />
       </div>
 
-      {/* Responsive Table Container */}
-      <div className="flex-1 overflow-auto">
+      {/* Desktop table */}
+      <div className="hidden md:block flex-1 overflow-auto">
         <table className="w-full min-w-[720px] text-left text-sm border-collapse">
           <thead className="bg-surface-2/20 backdrop-blur-md sticky top-0 z-10">
             <tr className="border-b border-border/40">
@@ -146,8 +207,6 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
           <tbody className="divide-y divide-border/20">
             {combinedRows.map((row) => {
               const isArchived = row.status === "archived";
-              const isPending = row.status === "pending";
-              const isActive = row.status === "active";
 
               return (
                 <tr
@@ -178,92 +237,10 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
                   </td>
 
                   {/* Status Badge */}
-                  <td className="px-6 py-4.5">
-                    {isArchived && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-danger/10 border border-danger/20 text-danger">
-                        Archived
-                      </span>
-                    )}
-                    {isActive && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-success/15 border border-success/30 text-success shadow-[0_0_10px_rgba(34,197,94,0.05)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                        Active
-                      </span>
-                    )}
-                    {isPending && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/15 border border-warning/30 text-warning">
-                        Pending Invite
-                      </span>
-                    )}
-                  </td>
+                  <td className="px-6 py-4.5">{statusBadge(row.status)}</td>
 
                   {/* Actions column */}
-                  <td className="px-6 py-4.5 text-right">
-                    <div className="flex items-center justify-end gap-3.5">
-                      {isPending && (
-                        <>
-                          <button
-                            onClick={() => handleCopyLink(row.id)}
-                            title="Copy invite link to share manually"
-                            className="flex items-center gap-1 text-xs font-bold text-text-secondary hover:text-text-primary transition-all bg-surface-2/40 border border-border/60 px-2.5 py-1 rounded-lg cursor-pointer"
-                          >
-                            <Link2 size={12} />
-                            Copy link
-                          </button>
-                          <button
-                            onClick={() => handleResend(row.id)}
-                            title="Resend Invitation Email"
-                            className="flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover transition-all bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-lg cursor-pointer hover:shadow-[0_0_8px_rgba(59,130,246,0.15)]"
-                          >
-                            <RefreshCw size={12} />
-                            Resend
-                          </button>
-                          <button
-                            onClick={() => handleCancelInvite(row.id)}
-                            title="Cancel Invitation"
-                            className="flex items-center gap-1 text-xs font-bold text-danger hover:text-danger-hover transition-all bg-danger/10 border border-danger/20 px-2.5 py-1 rounded-lg cursor-pointer"
-                          >
-                            <XCircle size={12} />
-                            Cancel
-                          </button>
-                        </>
-                      )}
-
-                      {isActive && row.email !== "admin@westindustries.com" && (
-                        <button
-                          onClick={() => handleArchive(row.id)}
-                          title="Archive User"
-                          className="flex items-center gap-1 text-xs font-bold text-danger hover:text-danger-hover transition-all bg-danger/10 border border-danger/20 px-2.5 py-1 rounded-lg cursor-pointer"
-                        >
-                          <Archive size={12} />
-                          Archive
-                        </button>
-                      )}
-
-                      {isArchived && (
-                        <button
-                          onClick={() => handleRestore(row.id)}
-                          title="Restore User"
-                          className="flex items-center gap-1 text-xs font-bold text-success hover:text-success-hover transition-all bg-success/10 border border-success/20 px-2.5 py-1 rounded-lg cursor-pointer"
-                        >
-                          <RotateCcw size={12} />
-                          Restore
-                        </button>
-                      )}
-
-                      {(isActive || isArchived) &&
-                        row.email !== "admin@westindustries.com" && (
-                          <button
-                            onClick={() => handleDelete(row.id, row.name)}
-                            title="Permanently delete user"
-                            className="flex items-center gap-1 text-xs font-bold text-danger hover:text-danger-hover transition-all bg-danger/10 border border-danger/30 px-2.5 py-1 rounded-lg cursor-pointer"
-                          >
-                            <Trash2 size={12} />
-                            Delete
-                          </button>
-                        )}
-                    </div>
-                  </td>
+                  <td className="px-6 py-4.5">{rowActions(row)}</td>
                 </tr>
               );
             })}
@@ -276,6 +253,48 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden flex-1 overflow-auto p-3 space-y-3">
+        {combinedRows.map((row) => (
+          <div
+            key={row.id}
+            className={cn(
+              "rounded-2xl border border-border/60 bg-surface/40 backdrop-blur-md p-4",
+              row.status === "archived" && "opacity-60"
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "font-semibold text-text-primary truncate",
+                      row.status === "archived" && "line-through text-text-secondary"
+                    )}
+                  >
+                    {row.name}
+                  </span>
+                  {row.email === "admin@westindustries.com" && (
+                    <ShieldCheck size={14} className="text-accent shrink-0" />
+                  )}
+                </div>
+                <div className="text-xs text-text-secondary font-mono truncate">{row.email}</div>
+              </div>
+              {statusBadge(row.status)}
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <RoleBadge role={row.role} />
+            </div>
+            <div className="mt-3">{rowActions(row)}</div>
+          </div>
+        ))}
+        {combinedRows.length === 0 && (
+          <p className="text-center text-text-secondary italic py-12">
+            No workspace members or pending invites found.
+          </p>
+        )}
       </div>
     </div>
   );
