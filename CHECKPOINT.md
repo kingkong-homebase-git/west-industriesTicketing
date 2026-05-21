@@ -88,67 +88,57 @@ pm2 save
 
 ---
 
-## Next up — feature requests (resume target)
+## Done recently
+- ✅ Hard-delete users (`6a9155e`), unique **Dashboard** (`969380f`), mobile shell v1:
+  collapsible sidebar + drawer (`83c0510`).
 
-### 1. Permanently delete users (hard delete, any state) — ✅ DONE (commit `6a9155e`, deployed)
-`deleteUser(userId)` in `src/actions/users.ts` (detaches FK refs, then deletes; guards:
-not self / not last super_user / protect seed admin) + a **Delete** button on active and
-archived rows in `TeamTable`. Archive/restore unchanged.
+## Next up — current build pass (resume target)
 
-### 2. Purge the bad test invite/user data in production — ⏳ IN PROGRESS (not yet executed)
-Backup taken: `/tmp/west_industries_backup_20260520_181354.sql` (⚠️ in `/tmp` — move to
-`/root/` or re-dump before the pending reboot if you want to keep it). **No deletes run yet.**
-Keep only **Jono (`justmarketme@gmail.com`, now an active user)** and **admin
-(`admin@westindustries.com`)**. Delete these archived users via the UI Delete button:
-`enslinmarnus0@gmail.com` (Marnusq), `perseverancezengele08@gmail.com` (now an archived
-user), `william.alexander.mcdonald@gmail.com`. Then clear leftover invites:
-```bash
-sudo -u postgres psql -d west_industries -c "DELETE FROM invites WHERE email <> 'justmarketme@gmail.com';"
-```
-Verify: users = admin + justmarketme only; invites = justmarketme only.
+### A. Team-member self-serve tickets — hide assignee in create (quick unblock)
+Team members are blocked creating tickets (assignee step). In `TicketForm`, hide the Assignee
+field for non-privileged users in **create mode** (don't render a disabled control); server
+already forces `assigneeId = self` (`createTicket`). Privileged keep the picker. Verify with a
+real team_member: create → succeeds → appears in My Tasks.
 
-### 3. Build a real, *unique* Dashboard (`src/app/(app)/dashboard/page.tsx`) — flagship
-Currently a "🚀 coming soon" stub. Make it a **command-center / analytics overview** with its
-own visual language — NOT another Kanban. Sexy + actually useful:
-- Hero KPI row w/ animated counters: active, overdue, due this week, completion rate.
-- Charts (`recharts`): status-distribution donut, weekly throughput, workload-by-assignee bar.
-- "My Focus" panel (signed-in user's open tickets, overdue, next deadline).
-- Upcoming deadlines (next 7 days, org-wide) timeline.
-- Recent activity feed (ticket updates / status moves / comments — `updated_at`, comments, `sync_logs`).
-- Sync-health tile (last pull time+status, push/pull counts from `sync_state`+`sync_logs`; link to /admin/sync-logs).
-- Team snapshot (active members, pending invites).
-- Role-aware (admin/super = org-wide; team_member = personal). Bento-grid, glassmorphism, motion, responsive.
+### B. Mobile overhaul — make it genuinely good (feels too "zoomed in" now)
+- Density: smaller padding/font/card heights on mobile; My Tasks KPI cards are huge → compact
+  (tight 2×2 or slim scrollable stat strip); scale type down a step at `sm`.
+- Kanban touch DnD: `touch-action` on cards + `@dnd-kit` TouchSensor/activation tuning (drag vs scroll).
+- Team table → **card stacks** on mobile (keep table on desktop).
+- Tap targets ≥40px, no horizontal overflow, dialogs/slide-over as bottom-sheets.
 
-### 4. Mobile-first responsive + collapsible sidebar (whole app)
-- Sidebar: desktop collapse toggle (icon rail ⇄ full, persist) + mobile hamburger drawer
-  (off-canvas, closes on nav).
-- Reflow header/KPIs, Kanban (touch DnD: PointerSensor + `touch-action`), Team table → cards
-  on mobile, slide-over/dialogs → full-width/bottom-sheet. No desktop regression.
+### C. Rebrand to "Hemisphere" + custom logo (UI/product name only)
+Replace visible "West Industries" → **Hemisphere** with a distinctive SVG logo (hemisphere /
+half-globe, gradient, glow, works in both themes + favicon): header, sidebar (rail + drawer),
+login/accept-invite, `<title>`/metadata, invite email template (`src/lib/email.ts`) + `EMAIL_FROM`
+display name. **Leave infra unchanged** (domain `westindustriesintl.com`, `admin@westindustries.com`,
+Notion DB, env vars) — UI rename only.
 
-### 5. Password reset / "forgot password"
-No self-serve reset exists. Add: "Forgot password" on `/login` → time-limited reset link via
-Resend → set-new-password page → sign in. Mirror the invite-token pattern; friendly `{ok,error}`.
+### D. Light / Dark mode toggle (header)
+Add light theme tokens (premium, not flat) alongside the dark ones in `globals.css`; sun/moon
+toggle in the header; persist + respect system pref; no flash on load (`next-themes` or manual
+`data-theme` + localStorage). Ensure glass/dashboard/charts/bg image read well in both.
 
-### 6. Notifications via Resend
+### E. Password reset / "forgot password"
+No self-serve reset exists. "Forgot password" on `/login` → time-limited reset link via Resend →
+set-new-password page → sign in. Mirror the invite-token pattern; friendly `{ok,error}`.
+
+### F. Notifications via Resend
 - "You've been assigned a ticket" email on assignment.
 - Deadline reminders: daily PM2 cron (reuse `west-industries-sync` pattern + a `scripts/…ts`)
   emailing assignees about tickets due within 24–48h; stamp a "reminded" field to dedupe.
 
-### 7. Polish
+### Polish / optional
 - Make `resendInvite` + `acceptInvite` return friendly `{ok,error}` like `inviteUser`.
-- Give the empty-title Notion page a title or archive it.
+- The data **purge** (delete 3 archived test users + clear invites, keep admin + Jono) is still
+  pending — backup at `/root/`. SQL: `DELETE FROM invites WHERE email <> 'justmarketme@gmail.com';`
+- (LAST, only if asked) move Resend to a work-owned account.
 
-### 8. (OPTIONAL — LAST, only on explicit request) Move Resend to a work-owned account
-Re-verify `westindustriesintl.com` under a work account, swap the API key in `.env.local`.
-Do NOT do this unless explicitly asked.
-
-**Guardrails:** #1 purge is destructive — backup first (done, at `/root/`). Each change:
-typecheck + lint + test → commit → deploy via the recipe. Never build on Windows.
-Suggested order: 1 → 2(Dashboard) → wait, renumber: **purge → Dashboard(#3) → mobile(#4) →
-password reset(#5) → notifications(#6) → polish(#7)**, with #8 only on request.
+**Guardrails:** typecheck + lint + test → commit → deploy. Never build on Windows.
+**Order:** A (quick) → B (mobile) → C (rebrand) → D (theme) → E (password reset) → F (notifications).
 
 ---
 
 ## How to resume
-Say "resume from CHECKPOINT.md". Current build pass: purge → Dashboard → mobile → password
-reset → notifications → polish (work-owned Resend account last, only if asked).
+Say "resume from CHECKPOINT.md". Current pass: self-serve tickets → mobile overhaul → Hemisphere
+rebrand → theme toggle → password reset → notifications.
