@@ -33,7 +33,10 @@ export function BrandLogo({
       <HemisphereMark size={size} className="shrink-0" />
       <span
         className={cn(
-          "font-bold tracking-tight bg-gradient-to-r from-text-primary via-text-primary to-accent bg-clip-text text-transparent",
+          // Single cohesive sunset gradient that matches the logo mark
+          // (orange → coral → magenta), so the wordmark merges with the logo
+          // and stays bright/legible on dark backgrounds.
+          "font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#fb923c] via-[#f9568a] to-[#c026d3]",
           textClassName
         )}
       >

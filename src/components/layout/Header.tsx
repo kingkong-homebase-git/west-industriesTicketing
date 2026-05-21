@@ -30,7 +30,9 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
         >
           <Menu size={20} />
         </button>
-        <BrandLogo size={26} textClassName="text-base" />
+        {/* Mobile only — on desktop the sidebar shows the brand, so this would
+            be a duplicate sitting beside it. */}
+        <BrandLogo size={26} textClassName="text-base" className="md:hidden" />
       </div>
 
       {/* User info */}
