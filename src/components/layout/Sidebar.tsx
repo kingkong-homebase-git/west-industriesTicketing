@@ -6,7 +6,6 @@ import {
   CheckSquare,
   Users,
   KanbanSquare,
-  Layers,
   LayoutDashboard,
   Activity,
   PanelLeftClose,
@@ -15,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HemisphereMark } from "@/components/brand/Logo";
 
 interface SidebarProps {
   role: string;
@@ -98,10 +98,10 @@ export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggle
   const Brand = ({ showLabel }: { showLabel: boolean }) => (
     <div className={cn("h-16 flex items-center border-b border-border bg-surface-2/10", showLabel ? "px-6" : "justify-center px-0")}>
       <div className="flex items-center gap-2.5 text-text-primary font-bold text-lg tracking-tight">
-        <Layers className="text-accent filter drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] shrink-0" size={20} />
+        <HemisphereMark size={24} className="shrink-0" />
         {showLabel && (
           <span className="bg-gradient-to-r from-text-primary via-text-primary to-accent bg-clip-text text-transparent">
-            West Industries
+            Hemisphere
           </span>
         )}
       </div>
@@ -153,8 +153,8 @@ export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggle
         >
           <div className="h-16 flex items-center justify-between px-4 border-b border-border bg-surface-2/10">
             <div className="flex items-center gap-2.5 text-text-primary font-bold text-lg tracking-tight">
-              <Layers className="text-accent shrink-0" size={20} />
-              <span>West Industries</span>
+              <HemisphereMark size={24} className="shrink-0" />
+              <span>Hemisphere</span>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-2/50" title="Close">
               <X size={20} />

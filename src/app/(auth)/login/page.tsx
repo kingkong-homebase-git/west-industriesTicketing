@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { z } from "zod";
+import { HemisphereMark } from "@/components/brand/Logo";
 
 const LoginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -58,12 +59,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md px-4">
         {/* Logo / Wordmark */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <HemisphereMark size={36} />
             <span className="text-2xl font-bold text-text-primary tracking-tight">
-              West Industries
+              Hemisphere
             </span>
           </div>
           <p className="text-text-secondary text-sm">

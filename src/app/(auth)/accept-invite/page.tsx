@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { validateInviteToken, acceptInvite } from "@/actions/users";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Layers, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { HemisphereMark } from "@/components/brand/Logo";
 
 const PasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -154,11 +155,9 @@ function AcceptInviteContent() {
         {/* Logo / Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
+            <HemisphereMark size={36} />
             <span className="text-2xl font-bold text-text-primary tracking-tight">
-              West Industries
+              Hemisphere
             </span>
           </div>
           <p className="text-text-secondary text-sm">

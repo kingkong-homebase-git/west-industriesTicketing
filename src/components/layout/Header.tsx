@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import RoleBadge from "./RoleBadge";
+import { BrandLogo } from "@/components/brand/Logo";
 import { LogOut, Menu } from "lucide-react";
 
 interface HeaderProps {
@@ -29,12 +30,7 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
         >
           <Menu size={20} />
         </button>
-        <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-          <span className="text-white font-bold text-sm">W</span>
-        </div>
-        <span className="font-bold text-base tracking-tight text-text-primary">
-          West Industries
-        </span>
+        <BrandLogo size={26} textClassName="text-base" />
       </div>
 
       {/* User info */}

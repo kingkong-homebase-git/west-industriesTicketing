@@ -18,7 +18,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 // one, use "onboarding@resend.dev" (Resend's shared sender) which can only
 // deliver to your own account email — fine for testing.
 const EMAIL_FROM =
-  process.env.EMAIL_FROM || "West Industries <onboarding@resend.dev>";
+  process.env.EMAIL_FROM || "Hemisphere <onboarding@resend.dev>";
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -34,7 +34,7 @@ function buildInviteHtml({
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>You're invited to West Industries</title>
+        <title>You're invited to Hemisphere</title>
         <style>
           body {
             background-color: #0b0f19;
@@ -137,13 +137,13 @@ function buildInviteHtml({
           <div class="container">
             <div class="header">
               <div class="logo">
-                West <span class="logo-accent">Industries</span>
+                Hemi<span class="logo-accent">sphere</span>
               </div>
             </div>
             <div class="content">
               <h1>You're Invited!</h1>
               <p>Hello ${inviteeName},</p>
-              <p><strong>${inviterName}</strong> has invited you to join the <strong>West Industries Workspace</strong> as a team member.</p>
+              <p><strong>${inviterName}</strong> has invited you to join the <strong>Hemisphere Workspace</strong> as a team member.</p>
               ${
                 personalMessage
                   ? `<div class="message-box">"${personalMessage}"</div>`
@@ -157,7 +157,7 @@ function buildInviteHtml({
               <p style="word-break: break-all; font-size: 13px; color: #3b82f6;">${inviteLink}</p>
             </div>
             <div class="footer">
-              This invitation was sent by <a href="${process.env.AUTH_URL || "http://localhost:3000"}">West Industries App</a>.<br>
+              This invitation was sent by <a href="${process.env.AUTH_URL || "http://localhost:3000"}">Hemisphere</a>.<br>
               If you were not expecting this invitation, you can safely ignore this email.
             </div>
           </div>
@@ -176,7 +176,7 @@ function buildInviteText({
   return [
     `Hello ${inviteeName},`,
     "",
-    `${inviterName} has invited you to join the West Industries Workspace.`,
+    `${inviterName} has invited you to join the Hemisphere Workspace.`,
     personalMessage ? `\nMessage: "${personalMessage}"\n` : "",
     "Accept your invitation (link expires in 48 hours):",
     inviteLink,
@@ -216,7 +216,7 @@ export async function sendInviteEmail(
     const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: toEmail,
-      subject: "You've been invited to join West Industries",
+      subject: "You've been invited to join Hemisphere",
       html: buildInviteHtml(params),
       text: buildInviteText(params),
     });
