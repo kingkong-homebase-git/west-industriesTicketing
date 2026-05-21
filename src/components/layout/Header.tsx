@@ -16,7 +16,7 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
     <header
       className="h-16 flex items-center justify-between px-4 sm:px-6 border-b shrink-0"
       style={{
-        background: "rgba(14, 19, 32, 0.20)",
+        background: "var(--header)",
         backdropFilter: "blur(10px)",
         borderColor: "var(--border)",
       }}

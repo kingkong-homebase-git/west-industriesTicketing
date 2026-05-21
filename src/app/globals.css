@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
-/* Light theme (default). Warm sunset-tinted neutrals. */
+/* Light theme (default). Warm, softened sunset neutrals (not blinding white). */
 :root {
-  --background: #fbf4ee;
-  --surface: #fffaf5;
-  --surface-2: #f3e7dc;
-  --border: rgba(234, 88, 12, 0.28);
+  --background: #f3e9dd;
+  --surface: #f9f1e8;
+  --surface-2: #ecdfd1;
+  --border: rgba(234, 88, 12, 0.5);
   --text-primary: #2a1c14;
   --text-secondary: #7c6555;
   --accent: #ea580c;
@@ -13,8 +13,9 @@
   --danger: #e11d48;
   --warning: #d97706;
   --success: #059669;
-  --app-overlay: rgba(251, 244, 238, 0.84);
-  --bg-image-opacity: 0.12;
+  --header: rgba(249, 241, 232, 0.72);
+  --app-overlay: rgba(244, 235, 224, 0.64);
+  --bg-image-opacity: 0.3;
 }
 
 /* Dark theme (warm sunset). */
@@ -22,7 +23,7 @@
   --background: #0a0707;
   --surface: #1a1310;
   --surface-2: #241914;
-  --border: rgba(251, 146, 60, 0.22);
+  --border: rgba(251, 146, 60, 0.42);
   --text-primary: #fdf6f0;
   --text-secondary: #b39d8f;
   --accent: #f97316;
@@ -30,6 +31,7 @@
   --danger: #f43f5e;
   --warning: #f59e0b;
   --success: #10b981;
+  --header: rgba(20, 14, 11, 0.55);
   --app-overlay: rgba(10, 7, 7, 0.62);
   --bg-image-opacity: 0.4;
 }
