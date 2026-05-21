@@ -133,7 +133,7 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
 
       {/* Responsive Table Container */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-left text-sm border-collapse">
+        <table className="w-full min-w-[720px] text-left text-sm border-collapse">
           <thead className="bg-surface-2/20 backdrop-blur-md sticky top-0 z-10">
             <tr className="border-b border-border/40">
               <th className="px-6 py-3.5 font-semibold text-text-secondary tracking-wider">Name</th>

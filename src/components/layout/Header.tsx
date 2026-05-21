@@ -2,24 +2,33 @@
 
 import { signOut } from "next-auth/react";
 import RoleBadge from "./RoleBadge";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 
 interface HeaderProps {
   user: { name: string; role: string; email: string };
+  onMenuClick?: () => void;
 }
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ user, onMenuClick }: HeaderProps) {
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 border-b shrink-0"
+      className="h-16 flex items-center justify-between px-4 sm:px-6 border-b shrink-0"
       style={{
         background: "rgba(14, 19, 32, 0.20)",
         backdropFilter: "blur(10px)",
         borderColor: "var(--border)",
       }}
     >
-      {/* Wordmark */}
+      {/* Hamburger (mobile) + wordmark */}
       <div className="flex items-center gap-2.5">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-1.5 -ml-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-2/50 transition-colors"
+          title="Open menu"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
         <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
           <span className="text-white font-bold text-sm">W</span>
         </div>

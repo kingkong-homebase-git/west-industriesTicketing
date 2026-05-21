@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
+import AppShell from "@/components/layout/AppShell";
 
 export default async function AppLayout({
   children,
@@ -37,13 +36,9 @@ export default async function AppLayout({
         }}
       />
       
-      <div className="relative z-10 flex h-full w-full overflow-hidden">
-        <Sidebar role={user.role} />
-        <div className="relative flex flex-col flex-1 min-w-0">
-          <Header user={user} />
-          <main className="flex-1 overflow-auto p-6">{children}</main>
-        </div>
-      </div>
+      <AppShell role={user.role} user={user}>
+        {children}
+      </AppShell>
     </div>
   );
 }
