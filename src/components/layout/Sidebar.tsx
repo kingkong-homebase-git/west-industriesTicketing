@@ -176,12 +176,11 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
     </nav>
   );
 
-  // Same background as the top Header (var(--header)) and no right border, so
-  // the logo area merges into the header strip as one continuous bar.
+  // Transparent (no own background, no border) so the logo area shows the same
+  // board background as the header and merges into it as one continuous bar.
   const Brand = ({ showLabel }: { showLabel: boolean }) => (
     <div
       className={cn("h-16 flex items-center", showLabel ? "px-5" : "justify-center px-0")}
-      style={{ background: "var(--header)", backdropFilter: "blur(10px)" }}
     >
       <div className="flex items-center gap-2.5 text-text-primary font-bold text-xl tracking-tight">
         <HemisphereMark size={34} className="shrink-0" />

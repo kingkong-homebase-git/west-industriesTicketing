@@ -13,13 +13,7 @@ interface HeaderProps {
 
 export default function Header({ user, onMenuClick }: HeaderProps) {
   return (
-    <header
-      className="h-16 flex items-center justify-between px-4 sm:px-6 shrink-0"
-      style={{
-        background: "var(--header)",
-        backdropFilter: "blur(10px)",
-      }}
-    >
+    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border shrink-0">
       {/* Hamburger (mobile) + wordmark */}
       <div className="flex items-center gap-2.5">
         <button
