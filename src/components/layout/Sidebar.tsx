@@ -180,7 +180,7 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
   // the logo area merges into the header strip as one continuous bar.
   const Brand = ({ showLabel }: { showLabel: boolean }) => (
     <div
-      className={cn("h-16 flex items-center border-b border-border", showLabel ? "px-5" : "justify-center px-0")}
+      className={cn("h-16 flex items-center", showLabel ? "px-5" : "justify-center px-0")}
       style={{ background: "var(--header)", backdropFilter: "blur(10px)" }}
     >
       <div className="flex items-center gap-2.5 text-text-primary font-bold text-xl tracking-tight">

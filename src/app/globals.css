@@ -54,30 +54,31 @@
   box-sizing: border-box;
 }
 
-/* Make the sunset/orange borders read a touch bolder app-wide (1px → 1.5px).
-   Unlayered so it overrides Tailwind's layered border-width utilities. */
+/* Make the sunset/orange borders read bolder app-wide (1px → 2px) so cards,
+   tickets and panels feel more substantial. Unlayered so it overrides
+   Tailwind's layered border-width utilities. */
 .border {
-  border-width: 1.5px;
+  border-width: 2px;
 }
 .border-t {
-  border-top-width: 1.5px;
+  border-top-width: 2px;
 }
 .border-b {
-  border-bottom-width: 1.5px;
+  border-bottom-width: 2px;
 }
 .border-l {
-  border-left-width: 1.5px;
+  border-left-width: 2px;
 }
 .border-r {
-  border-right-width: 1.5px;
+  border-right-width: 2px;
 }
 .border-x {
-  border-left-width: 1.5px;
-  border-right-width: 1.5px;
+  border-left-width: 2px;
+  border-right-width: 2px;
 }
 .border-y {
-  border-top-width: 1.5px;
-  border-bottom-width: 1.5px;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
 }
 
 body {

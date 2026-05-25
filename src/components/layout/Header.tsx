@@ -14,11 +14,10 @@ interface HeaderProps {
 export default function Header({ user, onMenuClick }: HeaderProps) {
   return (
     <header
-      className="h-16 flex items-center justify-between px-4 sm:px-6 border-b shrink-0"
+      className="h-16 flex items-center justify-between px-4 sm:px-6 shrink-0"
       style={{
         background: "var(--header)",
         backdropFilter: "blur(10px)",
-        borderColor: "var(--border)",
       }}
     >
       {/* Hamburger (mobile) + wordmark */}
