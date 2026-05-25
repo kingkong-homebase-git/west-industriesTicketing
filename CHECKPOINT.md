@@ -4,10 +4,8 @@
 Order: **0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last)**.
 Each migration: back up first, apply as `west_admin` (or `ALTER TABLE … OWNER TO west_admin`).
 
-0. **Remove Notion sync entirely** — delete `src/lib/sync/*`, `src/lib/notion.ts`, `src/actions/sync.ts`,
-   admin sync components + `/admin/sync-logs`, the `west-industries-sync` PM2 app, notion scripts,
-   `tests/sync.test.ts`, the dashboard sync-health tile + Sidebar "Sync logs" link, `NOTION_*` env.
-   Migration: drop `tickets.notion_*` cols + `sync_logs`/`sync_state` tables. App must work without Notion.
+0. ✅ **DONE & DEPLOYED** (`a00bfa6`, migration `0003` applied) — Notion sync fully removed; app
+   works without it; `west-industries-sync` PM2 worker deleted; `notion_*` cols + sync tables dropped.
 1. **Projects** — `projects` table; replace free-text `tickets.project` with `project_id` FK; in-app
    "Add project"; Projects section in sidebar; project dropdown in task create; group/filter by project.
 2. **Attachments** — links/images/docs per task; files → DO Spaces; `attachments` table; perms via

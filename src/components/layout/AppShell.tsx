@@ -7,10 +7,11 @@ import Header from "./Header";
 interface AppShellProps {
   role: string;
   user: { name: string; role: string; email: string };
+  projects: { id: string; name: string; color: string | null }[];
   children: React.ReactNode;
 }
 
-export default function AppShell({ role, user, children }: AppShellProps) {
+export default function AppShell({ role, user, projects, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -36,6 +37,7 @@ export default function AppShell({ role, user, children }: AppShellProps) {
     <div className="relative z-10 flex h-full w-full overflow-hidden">
       <Sidebar
         role={role}
+        projects={projects}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}

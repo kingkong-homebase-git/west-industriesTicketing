@@ -20,6 +20,7 @@ interface TicketFormProps {
   role: string;
   userId: string;
   allUsers: any[];
+  projects: { id: string; name: string }[];
   onClose: () => void;
   onTicketCreated?: (id: string) => void;
 }
@@ -30,6 +31,7 @@ export default function TicketForm({
   role,
   userId,
   allUsers,
+  projects,
   onClose,
   onTicketCreated,
 }: TicketFormProps) {
@@ -38,6 +40,7 @@ export default function TicketForm({
   const [status, setStatus] = useState(ticket?.status || "not_started");
   const [priority, setPriority] = useState(ticket?.priority || "medium");
   const [assigneeId, setAssigneeId] = useState(ticket?.assigneeId || "none");
+  const [projectId, setProjectId] = useState(ticket?.projectId || "none");
   const [deadline, setDeadline] = useState<Date | null>(
     ticket?.deadline ? new Date(ticket?.deadline) : null
   );
@@ -84,12 +87,13 @@ export default function TicketForm({
         priority,
         status,
         assigneeId: assigneeId === "none" ? null : assigneeId,
+        projectId: projectId === "none" ? null : projectId,
         deadline: deadline ? deadline.toISOString() : null,
       });
-      toast.success("Ticket created");
+      toast.success("Task created");
       onTicketCreated?.(newTicket.id);
     } catch (err: any) {
-      toast.error(err.message || "Failed to create ticket");
+      toast.error(err.message || "Failed to create task");
     } finally {
       setIsSaving(false);
     }
@@ -267,6 +271,47 @@ export default function TicketForm({
         </div>
         )}
 
+        {/* Project */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">Project</label>
+          <Select.Root
+            value={projectId}
+            onValueChange={(val) => {
+              setProjectId(val);
+              triggerSave({ projectId: val === "none" ? null : val });
+            }}
+            disabled={!canEditFields}
+          >
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
+              <Select.Value />
+              <Select.Icon>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                <Select.Viewport className="p-1">
+                  <Select.Item value="none" className="flex items-center px-6 py-1.5 text-sm text-text-secondary hover:bg-accent/20 rounded cursor-pointer outline-none">
+                    <Select.ItemText>No project</Select.ItemText>
+                  </Select.Item>
+                  {projects.map((p) => (
+                    <Select.Item
+                      key={p.id}
+                      value={p.id}
+                      className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none"
+                    >
+                      <Select.ItemText>{p.name}</Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-1.5">
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
         {/* Deadline */}
         <div className="space-y-1">
           <label className="text-xs text-text-secondary font-medium">Deadline</label>
@@ -362,7 +407,7 @@ export default function TicketForm({
             disabled={isSaving}
             className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
           >
-            {isSaving ? "Creating..." : "Create Ticket"}
+            {isSaving ? "Creating..." : "Create Task"}
           </button>
         </div>
       )}

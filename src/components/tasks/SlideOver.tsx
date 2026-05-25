@@ -5,6 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { X, MoreVertical } from "lucide-react";
 import { getTicketDetail, updateTicketStatus } from "@/actions/tickets";
+import { getProjects } from "@/actions/projects";
 import TicketForm from "./TicketForm";
 import ChecklistSection from "./ChecklistSection";
 import CommentsSection from "./CommentsSection";
@@ -32,12 +33,18 @@ export default function SlideOver({
 }: SlideOverProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
 
   const [confirmStatus, setConfirmStatus] = useState<
     "accomplished" | "failed" | null
   >(null);
 
   useEffect(() => {
+    if (isOpen) {
+      getProjects()
+        .then((rows) => setProjects(rows.map((p) => ({ id: p.id, name: p.name }))))
+        .catch(() => setProjects([]));
+    }
     if (isOpen && ticketId && !isCreateMode) {
       setLoading(true);
       getTicketDetail(ticketId)
@@ -130,7 +137,7 @@ export default function SlideOver({
 
           <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
             <Dialog.Title className="text-lg font-semibold text-text-primary">
-              {isCreateMode ? "New Ticket" : "Ticket Details"}
+              {isCreateMode ? "New Task" : "Task Details"}
             </Dialog.Title>
             <Dialog.Close className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors">
               <X size={20} />
@@ -150,6 +157,7 @@ export default function SlideOver({
                   role={role}
                   userId={userId}
                   allUsers={data.allUsers || []}
+                  projects={projects}
                   onClose={onClose}
                   onTicketCreated={(id) => {
                     onClose();

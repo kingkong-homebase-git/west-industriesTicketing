@@ -27,6 +27,7 @@ interface KanbanBoardProps {
   initialTickets: any[];
   role: string;
   userId: string;
+  title?: string;
 }
 
 const COLUMNS = [
@@ -41,7 +42,7 @@ const COLUMNS = [
 
 const DONE_STATUSES = new Set(["accomplished", "failed"]);
 
-export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoardProps) {
+export default function KanbanBoard({ initialTickets, role, userId, title = "My Tasks" }: KanbanBoardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tickets, setTickets] = useState(initialTickets);
@@ -234,7 +235,7 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-text-primary">My Tasks</h2>
+        <h2 className="text-xl font-bold text-text-primary">{title}</h2>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4">

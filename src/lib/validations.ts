@@ -6,6 +6,7 @@ export const CreateTicketSchema = z.object({
   description: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   assigneeId: z.string().uuid().optional().nullable(),
+  projectId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),
   status: z
     .enum([
@@ -25,6 +26,7 @@ export const UpdateTicketSchema = z.object({
   description: z.string().optional().nullable(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   assigneeId: z.string().uuid().optional().nullable(),
+  projectId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),
   status: z
     .enum([

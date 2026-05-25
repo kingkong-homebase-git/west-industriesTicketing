@@ -1,22 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   CheckSquare,
   Users,
   KanbanSquare,
   LayoutDashboard,
+  Folder,
+  Plus,
   PanelLeftClose,
   PanelLeftOpen,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { createProject } from "@/actions/projects";
 import { HemisphereMark } from "@/components/brand/Logo";
+
+interface Project {
+  id: string;
+  name: string;
+  color: string | null;
+}
 
 interface SidebarProps {
   role: string;
+  projects: Project[];
   collapsed: boolean;
   mobileOpen: boolean;
   onClose: () => void;
@@ -29,9 +40,26 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isPrivileged = role === "super_user" || role === "admin";
+
+  const handleAddProject = async () => {
+    const name = window.prompt("New project name:");
+    if (!name || !name.trim()) return;
+    try {
+      const res = await createProject({ name: name.trim() });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(`Project "${res.project.name}" created.`);
+      router.refresh();
+    } catch {
+      toast.error("Failed to create project.");
+    }
+  };
 
   const overview: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -92,6 +120,57 @@ export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggle
           </div>
         </div>
       )}
+
+      {/* Projects (dynamic) */}
+      <div>
+        {showLabel && (
+          <div className="px-3 mb-3 flex items-center justify-between">
+            <h4 className="text-[10px] font-bold text-accent/80 uppercase tracking-widest">Projects</h4>
+            {isPrivileged && (
+              <button onClick={handleAddProject} title="Add project" className="text-text-secondary hover:text-accent transition-colors">
+                <Plus size={14} />
+              </button>
+            )}
+          </div>
+        )}
+        <div className="space-y-1.5">
+          {projects.map((p) => {
+            const href = `/projects/${p.id}`;
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={p.id}
+                href={href}
+                onClick={onNavigate}
+                title={showLabel ? undefined : p.name}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+                  !showLabel && "justify-center",
+                  active
+                    ? "bg-accent/10 text-accent border-accent/20 font-semibold"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2/50"
+                )}
+              >
+                <Folder size={18} className={cn("shrink-0", active ? "text-accent" : "text-text-secondary")} />
+                {showLabel && <span className="truncate">{p.name}</span>}
+              </Link>
+            );
+          })}
+          {showLabel && projects.length === 0 && (
+            <p className="px-3 text-xs text-text-secondary/70 italic">No projects yet.</p>
+          )}
+          {/* collapsed-rail add button */}
+          {!showLabel && isPrivileged && (
+            <button
+              onClick={handleAddProject}
+              title="Add project"
+              className="flex items-center justify-center w-full px-3 py-2.5 rounded-xl text-text-secondary hover:text-accent hover:bg-surface-2/50 transition-colors"
+            >
+              <Plus size={18} />
+            </button>
+          )}
+        </div>
+      </div>
     </nav>
   );
 

@@ -45,6 +45,16 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
+// ─── Projects ─────────────────────────────────────────────────────────────────
+export const projects = pgTable("projects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").unique().notNull(),
+  color: text("color"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ─── Tickets ──────────────────────────────────────────────────────────────────
 // Note: creator_id is nullable in DB so ON DELETE SET NULL works correctly.
 // The application layer (Zod + server actions) enforces it is always provided on create.
@@ -65,7 +75,11 @@ export const tickets = pgTable(
     deadline: timestamp("deadline", { withTimezone: true }),
     deadlineEnd: timestamp("deadline_end", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
+    // legacy free-text project (kept for back-compat); structured project below
     project: text("project"),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
     expectedResults: text("expected_results"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -214,6 +228,7 @@ export type Ticket = typeof tickets.$inferSelect;
 export type NewTicket = typeof tickets.$inferInsert;
 export type ChecklistItem = typeof checklistItems.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
+export type Project = typeof projects.$inferSelect;
 export type UserRole = "super_user" | "admin" | "team_member";
 export type TicketStatus =
   | "not_started"
