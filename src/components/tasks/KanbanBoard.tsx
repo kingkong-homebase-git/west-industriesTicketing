@@ -22,7 +22,6 @@ import TicketCard from "./TicketCard";
 import NewTicketButton from "./NewTicketButton";
 import SlideOver from "./SlideOver";
 import { updateTicketStatus } from "@/actions/tickets";
-import { getTicketSyncStatus } from "@/actions/sync";
 
 interface KanbanBoardProps {
   initialTickets: any[];
@@ -175,21 +174,6 @@ export default function KanbanBoard({ initialTickets, role, userId }: KanbanBoar
         status: droppedTicket.status,
         sortOrder: droppedTicket.sortOrder
       });
-      // Push to Notion is debounced ~2s. Check the sync_status shortly
-      // after — if it's "failed", surface a toast with a link to logs.
-      // Only super_users see this hook (only they can change status).
-      setTimeout(async () => {
-        try {
-          const status = await getTicketSyncStatus(activeId);
-          if (status?.status === "failed") {
-            toast.error("Notion sync failed — see /admin/sync-logs", {
-              duration: 6000,
-            });
-          }
-        } catch {
-          // Silent — surfacing a "couldn't check sync status" toast would be noise.
-        }
-      }, 3500);
     } catch (err: any) {
       toast.error(err.message || "Failed to update status");
       setTickets(initialTickets); // rollback

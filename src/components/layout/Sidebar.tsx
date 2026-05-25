@@ -7,7 +7,6 @@ import {
   Users,
   KanbanSquare,
   LayoutDashboard,
-  Activity,
   PanelLeftClose,
   PanelLeftOpen,
   X,
@@ -40,7 +39,8 @@ export default function Sidebar({ role, collapsed, mobileOpen, onClose, onToggle
     { href: "/team-board", label: "Team Tasks", icon: KanbanSquare },
     ...(isPrivileged ? [{ href: "/team", label: "Team", icon: Users }] : []),
   ];
-  const admin: NavItem[] = role === "super_user" ? [{ href: "/admin/sync-logs", label: "Sync logs", icon: Activity }] : [];
+  // No admin-only nav items currently (Notion sync logs removed).
+  const admin: NavItem[] = [];
 
   const isActive = (href: string) =>
     href === "/team" ? pathname === "/team" : pathname.startsWith(href);

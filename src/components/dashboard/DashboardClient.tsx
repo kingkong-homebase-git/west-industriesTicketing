@@ -11,7 +11,6 @@ import {
   Flame,
   Gauge,
   ListChecks,
-  RefreshCw,
   Users,
 } from "lucide-react";
 
@@ -39,12 +38,6 @@ interface DashboardData {
     statusColor: string;
   }[];
   recentActivity: { id: string; kind: string; text: string; time: string }[];
-  syncHealth: {
-    lastPollAt: string | null;
-    lastPollStatus: string | null;
-    pushes24h: number;
-    pulls24h: number;
-  } | null;
   team: { activeMembers: number; pendingInvites: number } | null;
 }
 
@@ -386,41 +379,6 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             {data.recentActivity.length === 0 && <p className="text-sm text-text-secondary italic">No recent activity.</p>}
           </div>
         </Card>
-
-        {/* Sync health (privileged) */}
-        {isPrivileged && data.syncHealth && (
-          <Card
-            title="Notion sync"
-            icon={<RefreshCw size={16} className="text-accent" />}
-            action={
-              <Link href="/admin/sync-logs" className="text-xs text-accent hover:underline">
-                Logs
-              </Link>
-            }
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className={`w-2.5 h-2.5 rounded-full ${data.syncHealth.lastPollStatus === "success" ? "bg-success animate-pulse" : data.syncHealth.lastPollStatus ? "bg-danger" : "bg-text-secondary"}`}
-              />
-              <span className="text-sm font-medium text-text-primary capitalize">
-                {data.syncHealth.lastPollStatus ?? "no data"}
-              </span>
-              <span className="text-xs text-text-secondary ml-auto">
-                {data.syncHealth.lastPollAt ? relativeTime(data.syncHealth.lastPollAt) : "—"}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-surface-2/30 border border-border/40 p-3">
-                <div className="text-xl font-bold text-text-primary">{data.syncHealth.pulls24h}</div>
-                <div className="text-xs text-text-secondary">Pulls / 24h</div>
-              </div>
-              <div className="rounded-xl bg-surface-2/30 border border-border/40 p-3">
-                <div className="text-xl font-bold text-text-primary">{data.syncHealth.pushes24h}</div>
-                <div className="text-xs text-text-secondary">Pushes / 24h</div>
-              </div>
-            </div>
-          </Card>
-        )}
 
         {/* Team snapshot (privileged) */}
         {isPrivileged && data.team && (

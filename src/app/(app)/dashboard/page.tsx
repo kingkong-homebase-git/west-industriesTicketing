@@ -5,10 +5,8 @@ import {
   users,
   comments,
   invites,
-  syncState,
-  syncLogs,
 } from "../../../../drizzle/schema";
-import { eq, desc, gte } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -223,38 +221,10 @@ export default async function DashboardPage() {
   activity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   const recentActivity = activity.slice(0, 8);
 
-  // ─── Sync health + team snapshot (privileged only) ───────────────────────────
-  let syncHealth: {
-    lastPollAt: string | null;
-    lastPollStatus: string | null;
-    pushes24h: number;
-    pulls24h: number;
-  } | null = null;
+  // ─── Team snapshot (privileged only) ─────────────────────────────────────────
   let team: { activeMembers: number; pendingInvites: number } | null = null;
 
   if (isPrivileged) {
-    const [ss] = await db
-      .select({
-        lastPollAt: syncState.lastPollAt,
-        lastPollStatus: syncState.lastPollStatus,
-      })
-      .from(syncState)
-      .where(eq(syncState.id, 1))
-      .limit(1);
-
-    const since = new Date(now.getTime() - 24 * 3600 * 1000);
-    const logs = await db
-      .select({ direction: syncLogs.direction })
-      .from(syncLogs)
-      .where(gte(syncLogs.createdAt, since));
-
-    syncHealth = {
-      lastPollAt: ss?.lastPollAt ? new Date(ss.lastPollAt).toISOString() : null,
-      lastPollStatus: ss?.lastPollStatus ?? null,
-      pushes24h: logs.filter((l) => l.direction === "push").length,
-      pulls24h: logs.filter((l) => l.direction === "pull").length,
-    };
-
     const [activeMembers, pendingInvites] = await Promise.all([
       db.$count(users, eq(users.isArchived, false)),
       db.$count(invites, eq(invites.isAccepted, false)),
@@ -275,7 +245,6 @@ export default async function DashboardPage() {
         myFocus,
         upcomingDeadlines,
         recentActivity,
-        syncHealth,
         team,
       }}
     />
