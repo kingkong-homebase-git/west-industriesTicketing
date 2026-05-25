@@ -29,3 +29,29 @@ export function priorityMeta(priority: string): StatusMeta {
 }
 
 export const DONE_STATUSES = new Set(["accomplished", "failed"]);
+
+// ─── Eisenhower quadrant ──────────────────────────────────────────────────────
+export type QuadrantMeta = { label: string; short: string; rank: number };
+
+export const QUADRANT_META: Record<string, QuadrantMeta> = {
+  urgent_important: { label: "Urgent & Important", short: "Do now", rank: 0 },
+  not_urgent_important: { label: "Not Urgent · Important", short: "Schedule", rank: 1 },
+  urgent_not_important: { label: "Urgent · Not Important", short: "Delegate", rank: 2 },
+  not_urgent_not_important: { label: "Not Urgent · Not Important", short: "Later", rank: 3 },
+};
+
+export function quadrantMeta(q: string | null | undefined): QuadrantMeta | null {
+  if (!q) return null;
+  return QUADRANT_META[q] ?? null;
+}
+
+// Q1 (Urgent & Important) is the "starred" quadrant: red star on cards + the
+// dedicated Priority list.
+export function isStarred(q: string | null | undefined): boolean {
+  return q === "urgent_important";
+}
+
+export function quadrantRank(q: string | null | undefined): number {
+  if (!q) return 99;
+  return QUADRANT_META[q]?.rank ?? 99;
+}

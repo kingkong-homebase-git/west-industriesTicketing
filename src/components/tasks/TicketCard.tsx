@@ -4,8 +4,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn, getInitials } from "@/lib/utils";
 import DeadlineBadge from "./DeadlineBadge";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Star } from "lucide-react";
 import * as Avatar from "@radix-ui/react-avatar";
+import { isStarred } from "@/lib/ticket-meta";
 
 interface TicketCardProps {
   ticket: any;
@@ -42,6 +43,20 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
         isDragging && "opacity-50 ring-2 ring-accent"
       )}
     >
+      {isStarred(ticket.quadrant) && (
+        <div
+          className="absolute -top-2 -right-2 z-10"
+          title="Urgent & Important"
+        >
+          <Star
+            size={18}
+            strokeWidth={1.5}
+            style={{ fill: "#ef4444", color: "#fca5a5" }}
+            className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+          />
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-2 mb-2">
         <h4 className="text-sm font-medium text-text-primary leading-tight line-clamp-2">
           {ticket.title}

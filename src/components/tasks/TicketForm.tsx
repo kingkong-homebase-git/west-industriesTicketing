@@ -9,6 +9,7 @@ import * as Select from "@radix-ui/react-select";
 import * as Popover from "@radix-ui/react-popover";
 import { Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QUADRANT_META } from "@/lib/ticket-meta";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 
@@ -39,6 +40,7 @@ export default function TicketForm({
   const [description, setDescription] = useState(ticket?.description || "");
   const [status, setStatus] = useState(ticket?.status || "not_started");
   const [priority, setPriority] = useState(ticket?.priority || "medium");
+  const [quadrant, setQuadrant] = useState(ticket?.quadrant || "none");
   const [assigneeId, setAssigneeId] = useState(ticket?.assigneeId || "none");
   const [projectId, setProjectId] = useState(ticket?.projectId || "none");
   const [deadline, setDeadline] = useState<Date | null>(
@@ -85,6 +87,7 @@ export default function TicketForm({
         title,
         description,
         priority,
+        quadrant: quadrant === "none" ? null : quadrant,
         status,
         assigneeId: assigneeId === "none" ? null : assigneeId,
         projectId: projectId === "none" ? null : projectId,
@@ -216,6 +219,52 @@ export default function TicketForm({
                       className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
                     >
                       <Select.ItemText className="capitalize">{p}</Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-1.5">
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
+        {/* Priority matrix (Eisenhower quadrant) */}
+        <div className="space-y-1">
+          <label className="text-xs text-text-secondary font-medium">
+            Priority matrix
+          </label>
+          <Select.Root
+            value={quadrant}
+            onValueChange={(val) => {
+              setQuadrant(val);
+              triggerSave({ quadrant: val === "none" ? null : val });
+            }}
+            disabled={!canEditFields}
+          >
+            <Select.Trigger className="flex items-center justify-between w-full text-sm bg-surface/20 backdrop-blur-sm border border-border/60 px-3 py-1.5 rounded-md hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-50">
+              <Select.Value placeholder="None" />
+              <Select.Icon>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-surface/90 backdrop-blur-xl border border-border/80 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                <Select.Viewport className="p-1">
+                  <Select.Item
+                    value="none"
+                    className="flex items-center px-6 py-1.5 text-sm text-text-secondary hover:bg-accent/20 rounded cursor-pointer outline-none"
+                  >
+                    <Select.ItemText>None</Select.ItemText>
+                  </Select.Item>
+                  {Object.entries(QUADRANT_META).map(([key, meta]) => (
+                    <Select.Item
+                      key={key}
+                      value={key}
+                      className="flex items-center px-6 py-1.5 text-sm text-text-primary hover:bg-accent/20 hover:text-accent rounded cursor-pointer outline-none select-none data-[state=checked]:text-accent"
+                    >
+                      <Select.ItemText>{meta.label}</Select.ItemText>
                       <Select.ItemIndicator className="absolute left-1.5">
                         <Check size={14} />
                       </Select.ItemIndicator>

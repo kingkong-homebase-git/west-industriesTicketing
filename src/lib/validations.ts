@@ -1,10 +1,18 @@
 import { z } from "zod";
 
 // ─── Ticket ───────────────────────────────────────────────────────────────────
+const QuadrantEnum = z.enum([
+  "urgent_important",
+  "urgent_not_important",
+  "not_urgent_important",
+  "not_urgent_not_important",
+]);
+
 export const CreateTicketSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
   description: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
+  quadrant: QuadrantEnum.optional().nullable(),
   assigneeId: z.string().uuid().optional().nullable(),
   projectId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),
@@ -25,6 +33,7 @@ export const UpdateTicketSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().optional().nullable(),
   priority: z.enum(["low", "medium", "high"]).optional(),
+  quadrant: QuadrantEnum.optional().nullable(),
   assigneeId: z.string().uuid().optional().nullable(),
   projectId: z.string().uuid().optional().nullable(),
   deadline: z.string().datetime({ offset: true }).optional().nullable(),

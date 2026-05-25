@@ -41,6 +41,13 @@ export const ticketPriorityEnum = pgEnum("ticket_priority", [
 ]);
 // A link points to an external URL; a file holds uploaded bytes in `data`.
 export const attachmentKindEnum = pgEnum("attachment_kind", ["link", "file"]);
+// Eisenhower matrix quadrant (optional, separate from priority).
+export const taskQuadrantEnum = pgEnum("task_quadrant", [
+  "urgent_important",
+  "urgent_not_important",
+  "not_urgent_important",
+  "not_urgent_not_important",
+]);
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -76,6 +83,7 @@ export const tickets = pgTable(
     description: text("description"),
     status: ticketStatusEnum("status").notNull().default("not_started"),
     priority: ticketPriorityEnum("priority").notNull().default("medium"),
+    quadrant: taskQuadrantEnum("quadrant"),
     assigneeId: uuid("assignee_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -291,3 +299,8 @@ export type TicketStatus =
   | "accomplished"
   | "failed";
 export type TicketPriority = "low" | "medium" | "high";
+export type TaskQuadrant =
+  | "urgent_important"
+  | "urgent_not_important"
+  | "not_urgent_important"
+  | "not_urgent_not_important";

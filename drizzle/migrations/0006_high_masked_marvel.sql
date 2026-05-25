@@ -1,0 +1,2 @@
+CREATE TYPE "public"."task_quadrant" AS ENUM('urgent_important', 'urgent_not_important', 'not_urgent_important', 'not_urgent_not_important');--> statement-breakpoint
+ALTER TABLE "tickets" ADD COLUMN "quadrant" "task_quadrant";

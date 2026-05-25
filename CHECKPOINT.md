@@ -5,6 +5,17 @@ Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → **3 Views
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
 **RESUME HERE → #3 (Board views) in progress.**
 
+🆕 **Eisenhower priority matrix (user-requested, committed, NOT yet deployed)** — adds an
+optional `quadrant` field to tasks (Urgent&Important / Urgent·NotImportant /
+NotUrgent·Important / NotUrgent·NotImportant), separate from low/med/high priority. Q1
+(Urgent&Important) tasks get a red star (top-right of card) + a new **Priority** sidebar page
+listing all active Q1 tasks org-wide (soonest-deadline first). All orange borders thickened
+1px→1.5px (globals.css, unlayered override). Migration `0006_high_masked_marvel` (enum
+`task_quadrant` + nullable `tickets.quadrant`) — **apply as west_admin** then build+restart.
+
+✅ **#3 DEPLOYED & VERIFIED** — board view switcher (Kanban/Calendar/Timeline/Feed) on My
+Tasks, Project boards, and Team Board; choice persists in localStorage.
+
 ✅ **#2 DEPLOYED & VERIFIED** (commits `75fb4f0` + build-fix `fbb7ef5` + UX-fix `25159f6`,
 migration `0005_curved_magma` applied as west_admin). Attachments live: links + document
 uploads (bytea in Postgres, 10MB cap, images rejected), download via `/api/attachments/[id]`.

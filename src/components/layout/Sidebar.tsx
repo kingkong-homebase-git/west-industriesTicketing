@@ -8,6 +8,7 @@ import {
   KanbanSquare,
   LayoutDashboard,
   Folder,
+  Star,
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -64,6 +65,7 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
   const overview: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { href: "/priority", label: "Priority", icon: Star },
     { href: "/team-board", label: "Team Tasks", icon: KanbanSquare },
     ...(isPrivileged ? [{ href: "/team", label: "Team", icon: Users }] : []),
   ];

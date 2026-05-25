@@ -54,6 +54,32 @@
   box-sizing: border-box;
 }
 
+/* Make the sunset/orange borders read a touch bolder app-wide (1px → 1.5px).
+   Unlayered so it overrides Tailwind's layered border-width utilities. */
+.border {
+  border-width: 1.5px;
+}
+.border-t {
+  border-top-width: 1.5px;
+}
+.border-b {
+  border-bottom-width: 1.5px;
+}
+.border-l {
+  border-left-width: 1.5px;
+}
+.border-r {
+  border-right-width: 1.5px;
+}
+.border-x {
+  border-left-width: 1.5px;
+  border-right-width: 1.5px;
+}
+.border-y {
+  border-top-width: 1.5px;
+  border-bottom-width: 1.5px;
+}
+
 body {
   background: var(--background);
   color: var(--text-primary);
