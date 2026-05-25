@@ -1,17 +1,17 @@
 # Checkpoint — 2026-05-21
 
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
-Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → **3 Views (NEXT)** → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
+Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → **3 Views (IN PROGRESS)** → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
-**RESUME HERE → start at #3 (Board views).**
+**RESUME HERE → #3 (Board views) in progress.**
 
-⚠️ **NOT DEPLOYED YET** — #2 is committed but not built/migrated on the droplet.
-Deploy steps for #2 (do on droplet, never build on Windows):
-  1. `git pull` then apply migration `0005_curved_magma.sql` **as west_admin**
-     (`psql "$DATABASE_URL" -f drizzle/migrations/0005_curved_magma.sql`) — creates
-     `attachment_kind` enum + `attachments` table.
-  2. `pnpm build` (picks up new `next.config` `serverActions.bodySizeLimit: "12mb"`).
-  3. `pm2 restart west-industries && pm2 save`.
+✅ **#2 DEPLOYED & VERIFIED** (commits `75fb4f0` + build-fix `fbb7ef5` + UX-fix `25159f6`,
+migration `0005_curved_magma` applied as west_admin). Attachments live: links + document
+uploads (bytea in Postgres, 10MB cap, images rejected), download via `/api/attachments/[id]`.
+Lesson: a `"use server"` file may export **only async functions** — exporting a `number`
+const broke the droplet build (tsc/lint don't catch it; only `next build` does).
+Also fixed: paused the 10s `router.refresh()` poll while the slide-over is open (was
+interrupting edits) + comments only auto-scroll on a new post (not on open).
 
 0. ✅ **DONE & DEPLOYED** (`a00bfa6`, migration `0003`) — Notion sync fully removed.
 1. ✅ **DONE & DEPLOYED** (`3e63ba7`, migration `0004` applied as west_admin) — Projects: `projects`

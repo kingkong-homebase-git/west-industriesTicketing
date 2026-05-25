@@ -21,6 +21,10 @@ import KanbanColumn from "./KanbanColumn";
 import TicketCard from "./TicketCard";
 import NewTicketButton from "./NewTicketButton";
 import SlideOver from "./SlideOver";
+import ViewSwitcher, { type BoardView } from "./ViewSwitcher";
+import CalendarView from "./CalendarView";
+import TimelineView from "./TimelineView";
+import FeedView from "./FeedView";
 import { updateTicketStatus } from "@/actions/tickets";
 
 interface KanbanBoardProps {
@@ -50,11 +54,36 @@ export default function KanbanBoard({ initialTickets, role, userId, title = "My 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
+  const [view, setView] = useState<BoardView>("kanban");
 
   // Sync state when props change (from polling/server actions)
   useEffect(() => {
     setTickets(initialTickets);
   }, [initialTickets]);
+
+  // Restore the last-used view (client-only, avoids a hydration mismatch).
+  useEffect(() => {
+    const saved = localStorage.getItem("board-view");
+    if (
+      saved === "kanban" ||
+      saved === "calendar" ||
+      saved === "timeline" ||
+      saved === "feed"
+    ) {
+      setView(saved);
+    }
+  }, []);
+
+  const changeView = (v: BoardView) => {
+    setView(v);
+    localStorage.setItem("board-view", v);
+  };
+
+  const openTicket = (id: string) => {
+    setSelectedTicketId(id);
+    setIsCreateMode(false);
+    setIsSlideOverOpen(true);
+  };
 
   // Polling logic — paused while the slide-over is open so a background refresh
   // can't interrupt the user mid-edit (clearing inputs / jumping scroll).
@@ -237,40 +266,51 @@ export default function KanbanBoard({ initialTickets, role, userId, title = "My 
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-text-primary">{title}</h2>
+        <ViewSwitcher view={view} onChange={changeView} />
       </div>
 
-      <div className="flex-1 overflow-x-auto pb-4">
-        <div className="flex gap-4 h-full min-w-max items-start">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            {columns.map((col) => (
-              <KanbanColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                tickets={tickets.filter((t) => t.status === col.id)}
-                onCardClick={(id) => {
-                  setSelectedTicketId(id);
-                  setIsCreateMode(false);
-                  setIsSlideOverOpen(true);
-                }}
-              />
-            ))}
-            <DragOverlay>
-              {activeId ? (
-                <TicketCard ticket={getTicketById(activeId)} onClick={() => {}} />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+      {view === "kanban" ? (
+        <div className="flex-1 overflow-x-auto pb-4">
+          <div className="flex gap-4 h-full min-w-max items-start">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              {columns.map((col) => (
+                <KanbanColumn
+                  key={col.id}
+                  id={col.id}
+                  title={col.title}
+                  tickets={tickets.filter((t) => t.status === col.id)}
+                  onCardClick={openTicket}
+                />
+              ))}
+              <DragOverlay>
+                {activeId ? (
+                  <TicketCard ticket={getTicketById(activeId)} onClick={() => {}} />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 min-h-0 flex flex-col pb-4">
+          {view === "calendar" && (
+            <CalendarView tickets={tickets} onCardClick={openTicket} />
+          )}
+          {view === "timeline" && (
+            <TimelineView tickets={tickets} onCardClick={openTicket} />
+          )}
+          {view === "feed" && (
+            <FeedView tickets={tickets} onCardClick={openTicket} />
+          )}
+        </div>
+      )}
 
       <NewTicketButton
         onClick={() => {
