@@ -176,10 +176,15 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
     </nav>
   );
 
+  // Same background as the top Header (var(--header)) and no right border, so
+  // the logo area merges into the header strip as one continuous bar.
   const Brand = ({ showLabel }: { showLabel: boolean }) => (
-    <div className={cn("h-16 flex items-center border-b border-border bg-surface-2/10", showLabel ? "px-6" : "justify-center px-0")}>
-      <div className="flex items-center gap-2.5 text-text-primary font-bold text-lg tracking-tight">
-        <HemisphereMark size={24} className="shrink-0" />
+    <div
+      className={cn("h-16 flex items-center border-b border-border", showLabel ? "px-5" : "justify-center px-0")}
+      style={{ background: "var(--header)", backdropFilter: "blur(10px)" }}
+    >
+      <div className="flex items-center gap-2.5 text-text-primary font-bold text-xl tracking-tight">
+        <HemisphereMark size={34} className="shrink-0" />
         {showLabel && (
           <span className="bg-gradient-to-r from-text-primary via-text-primary to-accent bg-clip-text text-transparent">
             Hemisphere
@@ -194,29 +199,33 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
       {/* ── Desktop sidebar (collapsible rail) ── */}
       <aside
         className={cn(
-          "hidden md:flex shrink-0 flex-col border-r bg-surface/30 backdrop-blur-xl border-border transition-[width] duration-300",
+          "hidden md:flex shrink-0 flex-col transition-[width] duration-300",
           collapsed ? "w-20" : "w-64"
         )}
       >
         <Brand showLabel={!collapsed} />
-        <NavBody showLabel={!collapsed} />
-        <div className="p-3 border-t border-border bg-surface-2/5">
-          {!collapsed && (
-            <div className="bg-surface-2/20 backdrop-blur-md px-3 py-2.5 rounded-xl border border-border mb-3">
-              <div className="text-[9px] text-accent uppercase font-bold tracking-widest">Access level</div>
-              <div className="text-xs font-bold text-text-primary mt-1 capitalize tracking-wide">{role.replace("_", " ")}</div>
-            </div>
-          )}
-          <button
-            onClick={onToggleCollapse}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-2/50 transition-colors",
-              collapsed && "justify-center"
+        {/* Panel background + right divider live here (below the brand) so the
+            brand merges with the header instead of being walled off by a line. */}
+        <div className="flex-1 flex flex-col min-h-0 bg-surface/30 backdrop-blur-xl border-r border-border">
+          <NavBody showLabel={!collapsed} />
+          <div className="p-3 border-t border-border bg-surface-2/5">
+            {!collapsed && (
+              <div className="bg-surface-2/20 backdrop-blur-md px-3 py-2.5 rounded-xl border border-border mb-3">
+                <div className="text-[9px] text-accent uppercase font-bold tracking-widest">Access level</div>
+                <div className="text-xs font-bold text-text-primary mt-1 capitalize tracking-wide">{role.replace("_", " ")}</div>
+              </div>
             )}
-          >
-            {collapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /> Collapse</>}
-          </button>
+            <button
+              onClick={onToggleCollapse}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={cn(
+                "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-2/50 transition-colors",
+                collapsed && "justify-center"
+              )}
+            >
+              {collapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /> Collapse</>}
+            </button>
+          </div>
         </div>
       </aside>
 
