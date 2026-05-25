@@ -56,8 +56,11 @@ export default function KanbanBoard({ initialTickets, role, userId, title = "My 
     setTickets(initialTickets);
   }, [initialTickets]);
 
-  // Polling logic
+  // Polling logic — paused while the slide-over is open so a background refresh
+  // can't interrupt the user mid-edit (clearing inputs / jumping scroll).
   useEffect(() => {
+    if (isSlideOverOpen) return;
+
     const intervalId = setInterval(() => {
       if (document.visibilityState === "visible") {
         router.refresh();
@@ -75,7 +78,7 @@ export default function KanbanBoard({ initialTickets, role, userId, title = "My 
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [router]);
+  }, [router, isSlideOverOpen]);
 
   const columns = COLUMNS;
 

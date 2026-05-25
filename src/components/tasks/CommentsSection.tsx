@@ -17,13 +17,19 @@ export default function CommentsSection({ ticketId, initialComments }: CommentsS
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const prevCount = useRef(initialComments.length);
 
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
 
+  // Only scroll to the newest comment when one is actually added — not on
+  // mount, so opening a task doesn't fling the panel to the bottom.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (comments.length > prevCount.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevCount.current = comments.length;
   }, [comments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
