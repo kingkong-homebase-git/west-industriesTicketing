@@ -1,8 +1,31 @@
-# Checkpoint — 2026-05-20 (late)
+# Checkpoint — 2026-05-21
 
-Resume target: **three new feature requests** — hard-delete users, purge bad
-test data, and a mobile-first responsive redesign (see "Next up" at the bottom).
-Everything above that is the verified-live current state.
+## 🚧 CURRENT BUILD PLAN (active) — major direction change
+Order: **0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last)**.
+Each migration: back up first, apply as `west_admin` (or `ALTER TABLE … OWNER TO west_admin`).
+
+0. **Remove Notion sync entirely** — delete `src/lib/sync/*`, `src/lib/notion.ts`, `src/actions/sync.ts`,
+   admin sync components + `/admin/sync-logs`, the `west-industries-sync` PM2 app, notion scripts,
+   `tests/sync.test.ts`, the dashboard sync-health tile + Sidebar "Sync logs" link, `NOTION_*` env.
+   Migration: drop `tickets.notion_*` cols + `sync_logs`/`sync_state` tables. App must work without Notion.
+1. **Projects** — `projects` table; replace free-text `tickets.project` with `project_id` FK; in-app
+   "Add project"; Projects section in sidebar; project dropdown in task create; group/filter by project.
+2. **Attachments** — links/images/docs per task; files → DO Spaces; `attachments` table; perms via
+   `assertTicketAccess` (super/admin any active ticket, members own only).
+3. **Board views** — view-switcher dropdown (top-right): Kanban (existing) + Calendar + Timeline + Feed.
+4. **Priorities/SLA/notifications** — add `urgent`,`extreme` to priority enum; email ALL active members
+   on Urgent/Extreme task creation; SLA cron emails when a task is <12h from deadline + `notified_sla` flag.
+5. **CEO Google Calendar 2-way sync** — jacquesmwest@gmail.com; Google Cloud OAuth + Calendar API; biggest lift.
+6. **Copy** — task-create modal: "New Ticket"→"New Task", "Create Ticket"→"Create Task".
+
+Note: SLA assumed = "<12h before deadline" unless redefined. Notion removal is intentional (full delete).
+
+---
+
+## Prior state (pre-direction-change)
+Live in production at **https://app.westindustriesintl.com** (HTTPS, PM2, daily backups). Done before
+this plan: Hemisphere rebrand + logo + sunset theme + light/dark toggle, mobile overhaul, self-serve
+tickets, hard-delete users, password reset, dashboard, invites — and (being removed in #0) Notion sync.
 
 ---
 
