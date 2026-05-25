@@ -9,6 +9,7 @@ import { getProjects } from "@/actions/projects";
 import TicketForm from "./TicketForm";
 import ChecklistSection from "./ChecklistSection";
 import CommentsSection from "./CommentsSection";
+import AttachmentsSection from "./AttachmentsSection";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -171,6 +172,12 @@ export default function SlideOver({
                       ticketId={data.ticket.id}
                       initialItems={data.checklist}
                       isSuperUser={canEdit}
+                    />
+                    <div className="h-px w-full bg-border" />
+                    <AttachmentsSection
+                      ticketId={data.ticket.id}
+                      initialAttachments={data.attachments || []}
+                      canEdit={canEdit}
                     />
                     <div className="h-px w-full bg-border" />
                     <CommentsSection

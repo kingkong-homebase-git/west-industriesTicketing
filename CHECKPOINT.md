@@ -1,9 +1,17 @@
 # Checkpoint — 2026-05-21
 
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
-Order: 0 remove Notion → 1 Projects → 6 copy → **2 Attachments (NEXT)** → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
+Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → **3 Views (NEXT)** → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
-**RESUME HERE → start at #2 (Attachments).**
+**RESUME HERE → start at #3 (Board views).**
+
+⚠️ **NOT DEPLOYED YET** — #2 is committed but not built/migrated on the droplet.
+Deploy steps for #2 (do on droplet, never build on Windows):
+  1. `git pull` then apply migration `0005_curved_magma.sql` **as west_admin**
+     (`psql "$DATABASE_URL" -f drizzle/migrations/0005_curved_magma.sql`) — creates
+     `attachment_kind` enum + `attachments` table.
+  2. `pnpm build` (picks up new `next.config` `serverActions.bodySizeLimit: "12mb"`).
+  3. `pm2 restart west-industries && pm2 save`.
 
 0. ✅ **DONE & DEPLOYED** (`a00bfa6`, migration `0003`) — Notion sync fully removed.
 1. ✅ **DONE & DEPLOYED** (`3e63ba7`, migration `0004` applied as west_admin) — Projects: `projects`
@@ -11,9 +19,17 @@ Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OW
    (create/list/delete), sidebar Projects section + in-app "Add project" (window.prompt), Project
    dropdown in task create/edit, `/projects/[id]` board view.
 6. ✅ **DONE** (in `3e63ba7`) — task-create copy → "New Task" / "Create Task".
-2. **Attachments (NEXT)** — links/images/docs per task; files → DO Spaces; new `attachments` table
-   (ticketId, kind, url, filename, uploadedBy, createdAt); perms via `assertTicketAccess`
-   (super/admin any active ticket, members own only). Needs migration → apply as west_admin.
+2. ✅ **DONE (committed, NOT yet deployed)** — Attachments. **Design diverged from original
+   plan:** docs are stored as **bytea in Postgres** (not DO Spaces) per user decision — ships
+   today, no creds needed, and files ride along in the daily pg_dump backups. **Images skipped**
+   for now (links + documents only). New `attachments` table (ticketId, kind link/file, url,
+   filename, mimeType, data bytea, size, uploadedById, createdAt); `attachment_kind` enum.
+   `assertTicketAccess` extracted to `src/lib/ticket-access.ts` (shared by tickets + attachments
+   actions). Upload via server action (10MB cap, rejects `image/*`); download/serve via
+   `GET /api/attachments/[id]` (auth + access-checked; links 302-redirect). `AttachmentsSection`
+   in the SlideOver (Add link / Upload / delete). `next.config` bumped `serverActions.bodySizeLimit`
+   to 12mb (default 1MB would block uploads). Migration `0005_curved_magma`.
+   Follow-up if files outgrow the DB: migrate to DO Spaces (a Spaces account already exists for backups).
 3. **Board views** — view-switcher dropdown (top-right): Kanban (existing) + Calendar + Timeline + Feed.
 4. **Priorities/SLA/notifications** — add `urgent`,`extreme` to priority enum; email ALL active members
    on Urgent/Extreme task creation; SLA cron emails when a task is <12h from deadline + `notified_sla` flag.

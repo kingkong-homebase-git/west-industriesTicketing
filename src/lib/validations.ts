@@ -71,6 +71,13 @@ export const AddCommentSchema = z.object({
   body: z.string().min(1).max(5000),
 });
 
+// ─── Attachments ──────────────────────────────────────────────────────────────
+export const AddLinkAttachmentSchema = z.object({
+  ticketId: z.string().uuid(),
+  url: z.string().url("Enter a valid URL").max(2000),
+  label: z.string().max(200).optional().nullable(),
+});
+
 export const CreateUserSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(100),

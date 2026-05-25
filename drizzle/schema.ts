@@ -7,8 +7,16 @@ import {
   integer,
   timestamp,
   index,
+  customType,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+// Raw binary column for storing uploaded document bytes directly in Postgres.
+const bytea = customType<{ data: Buffer; default: false }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 export const userRoleEnum = pgEnum("user_role", [
@@ -31,6 +39,8 @@ export const ticketPriorityEnum = pgEnum("ticket_priority", [
   "medium",
   "high",
 ]);
+// A link points to an external URL; a file holds uploaded bytes in `data`.
+export const attachmentKindEnum = pgEnum("attachment_kind", ["link", "file"]);
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -132,6 +142,34 @@ export const comments = pgTable(
   (t) => [index("comments_ticket_idx").on(t.ticketId)]
 );
 
+// ─── Attachments ──────────────────────────────────────────────────────────────
+// kind="link": `url` holds the external URL, `filename` an optional label.
+// kind="file": `data` holds the uploaded bytes (served via /api/attachments/[id]),
+// with `mimeType` and `size`; `url` is null. Listing queries must NOT select
+// `data` — only the download route loads the blob.
+export const attachments = pgTable(
+  "attachments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ticketId: uuid("ticket_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    kind: attachmentKindEnum("kind").notNull(),
+    url: text("url"),
+    filename: text("filename").notNull(),
+    mimeType: text("mime_type"),
+    data: bytea("data"),
+    size: integer("size"),
+    uploadedById: uuid("uploaded_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("attachments_ticket_idx").on(t.ticketId)]
+);
+
 // ─── Invites ──────────────────────────────────────────────────────────────────
 export const invites = pgTable(
   "invites",
@@ -201,6 +239,18 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   }),
   checklistItems: many(checklistItems),
   comments: many(comments),
+  attachments: many(attachments),
+}));
+
+export const attachmentsRelations = relations(attachments, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [attachments.ticketId],
+    references: [tickets.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [attachments.uploadedById],
+    references: [users.id],
+  }),
 }));
 
 export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
@@ -229,6 +279,8 @@ export type NewTicket = typeof tickets.$inferInsert;
 export type ChecklistItem = typeof checklistItems.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type Project = typeof projects.$inferSelect;
+export type Attachment = typeof attachments.$inferSelect;
+export type AttachmentKind = "link" | "file";
 export type UserRole = "super_user" | "admin" | "team_member";
 export type TicketStatus =
   | "not_started"

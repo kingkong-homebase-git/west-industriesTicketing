@@ -1,9 +1,16 @@
 "use server";
 
 import { db } from "@/db";
-import { tickets, checklistItems, comments, users } from "../../drizzle/schema";
+import {
+  tickets,
+  checklistItems,
+  comments,
+  users,
+  attachments,
+} from "../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 import { requireAnyRole, isPrivilegedRole } from "@/lib/require-role";
+import { assertTicketAccess } from "@/lib/ticket-access";
 import {
   CreateTicketSchema,
   UpdateTicketSchema,
@@ -47,29 +54,47 @@ export async function getTicketDetail(id: string) {
 
   if (!ticket) throw new Error("Ticket not found");
 
-  const [checklist, ticketComments, allUsers] = await Promise.all([
-    db
-      .select()
-      .from(checklistItems)
-      .where(eq(checklistItems.ticketId, id))
-      .orderBy(asc(checklistItems.sortOrder)),
-    db
-      .select({
-        id: comments.id,
-        body: comments.body,
-        createdAt: comments.createdAt,
-        authorId: comments.authorId,
-        authorName: users.name,
-      })
-      .from(comments)
-      .leftJoin(users, eq(comments.authorId, users.id))
-      .where(eq(comments.ticketId, id))
-      .orderBy(asc(comments.createdAt)),
-    db
-      .select({ id: users.id, name: users.name, email: users.email })
-      .from(users)
-      .where(eq(users.isArchived, false)),
-  ]);
+  const [checklist, ticketComments, ticketAttachments, allUsers] =
+    await Promise.all([
+      db
+        .select()
+        .from(checklistItems)
+        .where(eq(checklistItems.ticketId, id))
+        .orderBy(asc(checklistItems.sortOrder)),
+      db
+        .select({
+          id: comments.id,
+          body: comments.body,
+          createdAt: comments.createdAt,
+          authorId: comments.authorId,
+          authorName: users.name,
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.authorId, users.id))
+        .where(eq(comments.ticketId, id))
+        .orderBy(asc(comments.createdAt)),
+      // Metadata only — never select the `data` blob here.
+      db
+        .select({
+          id: attachments.id,
+          kind: attachments.kind,
+          url: attachments.url,
+          filename: attachments.filename,
+          mimeType: attachments.mimeType,
+          size: attachments.size,
+          createdAt: attachments.createdAt,
+          uploadedById: attachments.uploadedById,
+          uploadedByName: users.name,
+        })
+        .from(attachments)
+        .leftJoin(users, eq(attachments.uploadedById, users.id))
+        .where(eq(attachments.ticketId, id))
+        .orderBy(asc(attachments.createdAt)),
+      db
+        .select({ id: users.id, name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.isArchived, false)),
+    ]);
 
   let assignee = null;
   if (ticket.assigneeId) {
@@ -80,29 +105,14 @@ export async function getTicketDetail(id: string) {
     assignee = a ?? null;
   }
 
-  return { ticket, checklist, comments: ticketComments, assignee, allUsers };
-}
-
-// Team members may only act on tickets they own (assigned to or created by
-// them). Privileged roles (super_user/admin) may act on any ticket. Throws if a
-// team member targets someone else's ticket.
-async function assertTicketAccess(
-  ticketId: string,
-  userId: string,
-  role: string
-): Promise<void> {
-  if (isPrivilegedRole(role)) return;
-
-  const [t] = await db
-    .select({ assigneeId: tickets.assigneeId, creatorId: tickets.creatorId })
-    .from(tickets)
-    .where(eq(tickets.id, ticketId))
-    .limit(1);
-
-  if (!t) throw new Error("Ticket not found");
-  if (t.assigneeId !== userId && t.creatorId !== userId) {
-    throw new Error("Forbidden: you can only modify your own tickets");
-  }
+  return {
+    ticket,
+    checklist,
+    comments: ticketComments,
+    attachments: ticketAttachments,
+    assignee,
+    allUsers,
+  };
 }
 
 // ─── Create ticket ────────────────────────────────────────────────────────────
