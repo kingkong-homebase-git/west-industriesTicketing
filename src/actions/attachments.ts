@@ -8,7 +8,7 @@ import { assertTicketAccess } from "@/lib/ticket-access";
 import { AddLinkAttachmentSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 
-export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB
 
 // Shape returned to the client — never includes the raw `data` blob.
 type AttachmentMeta = {
