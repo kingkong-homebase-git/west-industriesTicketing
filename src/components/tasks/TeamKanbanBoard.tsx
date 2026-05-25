@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import TicketCard from "./TicketCard";
 import SlideOver from "./SlideOver";
+import ViewSwitcher, { type BoardView } from "./ViewSwitcher";
+import CalendarView from "./CalendarView";
+import TimelineView from "./TimelineView";
+import FeedView from "./FeedView";
 import * as Avatar from "@radix-ui/react-avatar";
 import { getInitials } from "@/lib/utils";
 
@@ -17,11 +21,36 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
   const [tickets, setTickets] = useState(initialTickets);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [view, setView] = useState<BoardView>("kanban");
 
   // Sync state when props change
   useEffect(() => {
     setTickets(initialTickets);
   }, [initialTickets]);
+
+  // Restore last-used view (client-only, avoids hydration mismatch). Stored
+  // separately from the personal board so the two remember independently.
+  useEffect(() => {
+    const saved = localStorage.getItem("team-board-view");
+    if (
+      saved === "kanban" ||
+      saved === "calendar" ||
+      saved === "timeline" ||
+      saved === "feed"
+    ) {
+      setView(saved);
+    }
+  }, []);
+
+  const changeView = (v: BoardView) => {
+    setView(v);
+    localStorage.setItem("team-board-view", v);
+  };
+
+  const openTicket = (id: string) => {
+    setSelectedTicketId(id);
+    setIsSlideOverOpen(true);
+  };
 
   const columns = [
     { id: "unassigned", title: "Unassigned", user: null },
@@ -30,11 +59,33 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
 
   return (
     <div className="h-full flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Team Board</h1>
-        <p className="text-sm text-text-secondary">View tasks assigned to each team member</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Team Board</h1>
+          {view === "kanban" && (
+            <p className="text-sm text-text-secondary">
+              View tasks assigned to each team member
+            </p>
+          )}
+        </div>
+        <ViewSwitcher view={view} onChange={changeView} />
       </div>
 
+      {view !== "kanban" && (
+        <div className="flex-1 min-h-0 flex flex-col pb-4">
+          {view === "calendar" && (
+            <CalendarView tickets={tickets} onCardClick={openTicket} />
+          )}
+          {view === "timeline" && (
+            <TimelineView tickets={tickets} onCardClick={openTicket} />
+          )}
+          {view === "feed" && (
+            <FeedView tickets={tickets} onCardClick={openTicket} />
+          )}
+        </div>
+      )}
+
+      {view === "kanban" && (
       <div className="flex-1 overflow-x-auto pb-4">
         <div className="flex gap-4 h-full min-w-max items-start">
           {columns.map((col) => {
@@ -75,10 +126,7 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
                     <TicketCard
                       key={ticket.id}
                       ticket={ticket}
-                      onClick={() => {
-                        setSelectedTicketId(ticket.id);
-                        setIsSlideOverOpen(true);
-                      }}
+                      onClick={openTicket}
                     />
                   ))}
                   {colTickets.length === 0 && (
@@ -92,6 +140,7 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
           })}
         </div>
       </div>
+      )}
 
       <SlideOver
         isOpen={isSlideOverOpen}
