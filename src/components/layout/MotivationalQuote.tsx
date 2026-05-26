@@ -22,7 +22,7 @@ export default function MotivationalQuote() {
           key={quote}
           title={quote}
           style={{ fontFamily: "var(--font-script)" }}
-          className="quote-animate max-w-3xl text-center text-xl lg:text-2xl leading-tight select-none bg-gradient-to-r from-[#fb923c] via-[#f9568a] to-[#c026d3] bg-clip-text text-transparent"
+          className="quote-animate max-w-3xl text-center text-xl lg:text-2xl leading-tight select-none bg-gradient-to-r from-[#fb923c] via-[#f9568a] to-[#e11d48] bg-clip-text text-transparent"
         >
           {quote}
         </p>
