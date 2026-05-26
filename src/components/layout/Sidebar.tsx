@@ -198,16 +198,16 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
       {/* ── Desktop sidebar (collapsible rail) ── */}
       <aside
         className={cn(
-          "hidden md:flex shrink-0 flex-col transition-[width] duration-300",
+          "hidden md:flex shrink-0 flex-col overflow-hidden rounded-2xl border border-border shadow-xl bg-background/90 backdrop-blur-md transition-[width] duration-300",
           collapsed ? "w-20" : "w-64"
         )}
       >
         <Brand showLabel={!collapsed} />
-        {/* Frosted panel background. No right border — the content panel now
-            floats inset with its own border, so a divider here just adds clutter. */}
-        <div className="flex-1 flex flex-col min-h-0 bg-surface/30 backdrop-blur-xl">
+        {/* Transparent so the whole panel is one uniform colour, matching the
+            content panel exactly. */}
+        <div className="flex-1 flex flex-col min-h-0">
           <NavBody showLabel={!collapsed} />
-          <div className="p-3 border-t border-border bg-surface-2/5">
+          <div className="p-3 border-t border-border">
             {!collapsed && (
               <div className="bg-surface-2/20 backdrop-blur-md px-3 py-2.5 rounded-xl border border-border mb-3">
                 <div className="text-[9px] text-accent uppercase font-bold tracking-widest">Access level</div>

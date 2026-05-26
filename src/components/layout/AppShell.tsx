@@ -34,7 +34,9 @@ export default function AppShell({ role, user, projects, children }: AppShellPro
     });
 
   return (
-    <div className="relative z-10 flex h-full w-full overflow-hidden">
+    // Sidebar + content are two floating panels on the same background, with
+    // equal margins all around and an equal gutter between them.
+    <div className="relative z-10 flex h-full w-full overflow-hidden p-3 sm:p-4 gap-3 sm:gap-4">
       <Sidebar
         role={role}
         projects={projects}
@@ -43,14 +45,10 @@ export default function AppShell({ role, user, projects, children }: AppShellPro
         onClose={() => setMobileOpen(false)}
         onToggleCollapse={toggleCollapse}
       />
-      {/* Header + board live in ONE inset, rounded panel so they read as a
-          single cohesive surface (same color top-to-bottom). The page
-          background (mountain) shows in the surrounding margin. */}
-      <div className="relative flex flex-col flex-1 min-w-0 p-3 sm:p-4">
-        <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-2xl border border-border shadow-xl bg-background/90 backdrop-blur-md">
-          <Header user={user} onMenuClick={() => setMobileOpen(true)} />
-          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
-        </div>
+      {/* Header + board: one rounded panel matching the sidebar panel. */}
+      <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden rounded-2xl border border-border shadow-xl bg-background/90 backdrop-blur-md">
+        <Header user={user} onMenuClick={() => setMobileOpen(true)} />
+        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );
