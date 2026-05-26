@@ -10,6 +10,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QUADRANT_META } from "@/lib/ticket-meta";
+import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 
@@ -50,6 +51,11 @@ export default function TicketForm({
   const [isEditingDesc, setIsEditingDesc] = useState(isCreateMode);
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  // Match the markdown editor + preview to the active theme so text stays
+  // legible in light mode (the editor was hardcoded to dark).
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   // Privileged roles edit any ticket; team members edit tickets they own
   // (assigned to or created by them). Create mode is always editable.
@@ -414,7 +420,7 @@ export default function TicketForm({
         </div>
 
         {isEditingDesc ? (
-          <div data-color-mode="dark" className="border border-border rounded-md overflow-hidden">
+          <div data-color-mode={isDark ? "dark" : "light"} className="border border-border rounded-md overflow-hidden">
             <MDEditor
               value={description}
               onChange={(val) => {
@@ -432,7 +438,7 @@ export default function TicketForm({
             />
           </div>
         ) : (
-          <div className="prose prose-invert prose-sm max-w-none bg-surface/10 backdrop-blur-md border border-border/40 p-4 rounded-xl min-h-[100px]">
+          <div className={cn("prose prose-sm max-w-none bg-surface/10 backdrop-blur-md border border-border/40 p-4 rounded-xl min-h-[100px]", isDark && "prose-invert")}>
             {description ? (
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{description}</ReactMarkdown>
             ) : (
