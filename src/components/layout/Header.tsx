@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import RoleBadge from "./RoleBadge";
 import { HemisphereMark } from "@/components/brand/Logo";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import MotivationalQuote from "./MotivationalQuote";
 import { LogOut, Menu } from "lucide-react";
 
 interface HeaderProps {
@@ -28,6 +29,9 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
             theme toggle. On desktop the sidebar shows the full brand. */}
         <HemisphereMark size={28} className="md:hidden" />
       </div>
+
+      {/* Rotating motivational quote (desktop only) */}
+      <MotivationalQuote />
 
       {/* User info */}
       <div className="flex items-center gap-3">

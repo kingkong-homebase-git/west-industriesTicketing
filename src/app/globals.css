@@ -114,6 +114,38 @@ body {
   max-height: calc(100vh - 200px);
 }
 
+/* Header motivational quote: gentle fade/slide-in, then a soft endless float. */
+@keyframes quote-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes quote-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.quote-animate {
+  animation:
+    quote-in 0.7s ease-out both,
+    quote-float 6s ease-in-out 0.7s infinite;
+  padding-bottom: 0.15em; /* room for script-font descenders so they aren't clipped */
+}
+@media (prefers-reduced-motion: reduce) {
+  .quote-animate {
+    animation: quote-in 0.4s ease-out both;
+  }
+}
+
 /* Theme-aware app background (mountain image + tint overlay) */
 .app-bg-image {
   opacity: var(--bg-image-opacity);
