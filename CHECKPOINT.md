@@ -1,20 +1,42 @@
 # Checkpoint — 2026-05-21
 
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
-Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → **3 Views (IN PROGRESS)** → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
+Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
-**RESUME HERE → #3 (Board views) in progress.**
+**RESUME HERE → finish the PENDING UI POLISH below, then #4 (SLA/notifications — email, not yet started).**
 
-🆕 **Eisenhower priority matrix (user-requested, committed, NOT yet deployed)** — adds an
-optional `quadrant` field to tasks (Urgent&Important / Urgent·NotImportant /
-NotUrgent·Important / NotUrgent·NotImportant), separate from low/med/high priority. Q1
-(Urgent&Important) tasks get a red star (top-right of card) + a new **Priority** sidebar page
-listing all active Q1 tasks org-wide (soonest-deadline first). All orange borders thickened
-1px→1.5px (globals.css, unlayered override). Migration `0006_high_masked_marvel` (enum
-`task_quadrant` + nullable `tickets.quadrant`) — **apply as west_admin** then build+restart.
+### ⚠️ PENDING UI POLISH (in-flight, NOT done — resume here)
+Last deployed UI commit = `bb12a67` (transparent header + 3px borders). User feedback still open:
+1. **Top bar color still doesn't match the board** in BOTH light and dark. Header + sidebar
+   brand were made `background: transparent` (commit `bb12a67`) but the top still reads a
+   different shade than the board area behind the cards. **Want:** the top bar to use the EXACT
+   same color as the rest of the board, per theme (light + dark). Likely fix: stop relying on
+   transparency/`var(--header)` and paint the header with the same effective color as the board
+   surface (define/verify a single token used by both, e.g. match `--background`/app-overlay
+   composite, or give header the same surface the cards sit on). Verify against screenshots in
+   both modes — currently header looks lighter (light) / slightly off (dark).
+2. **Header/top-bar corners are square/cut-off.** User wants the edges & corners rounded and
+   "fluent" like the task cards (cards use `rounded-2xl`/`rounded-xl`). "All need to be one" —
+   i.e. the header should feel like one continuous rounded surface with the board, not a
+   sharp-cornered strip. Round the relevant top container corners to match the card radius.
+Note: header bottom border is restored (`border-b border-border`); the logo area must stay
+borderless (no line under "Hemisphere"). Border width is currently 3px app-wide.
 
 ✅ **#3 DEPLOYED & VERIFIED** — board view switcher (Kanban/Calendar/Timeline/Feed) on My
-Tasks, Project boards, and Team Board; choice persists in localStorage.
+Tasks, Project boards, and Team Board; choice persists in localStorage (`05e527d`, `a9e8eea`).
+
+✅ **#4-partial (Eisenhower priority matrix) DEPLOYED & VERIFIED** (`ae5f6bd`, migration
+`0006_high_masked_marvel` applied as west_admin). Optional `quadrant` field on tasks (4
+Eisenhower quadrants, separate from low/med/high). Q1 (Urgent&Important) tasks show a red star
+(top-right of card) + feed the new **Priority** sidebar page (`/priority`, active Q1 org-wide,
+soonest deadline first). Star scope = Q1 only; no Kanban auto-reorder; star is a lucide icon
+(not the redstar.png — it had a white bg). Remaining #4 work (NOT started): urgent/extreme
+email notifications + SLA deadline-reminder cron.
+
+🎨 **UI tweaks deployed since #3:** logo enlarged + brand merged into header (`39f9917`);
+top-bar bottom border removed then header border restored, borders 1.5px→2px→3px
+(`6fb356e`, `bb12a67`). Border thickening is a global unlayered override of the `.border*`
+utilities in `globals.css`.
 
 ✅ **#2 DEPLOYED & VERIFIED** (commits `75fb4f0` + build-fix `fbb7ef5` + UX-fix `25159f6`,
 migration `0005_curved_magma` applied as west_admin). Attachments live: links + document
