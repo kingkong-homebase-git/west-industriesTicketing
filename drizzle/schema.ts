@@ -102,6 +102,8 @@ export const tickets = pgTable(
       onDelete: "set null",
     }),
     expectedResults: text("expected_results"),
+    // Google Calendar event id for this task (one-way sync); null = not synced.
+    googleEventId: text("google_event_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -229,6 +231,28 @@ export const passwordResets = pgTable(
   (t) => [index("password_resets_token_idx").on(t.token)]
 );
 
+// ─── Google Calendar integration ──────────────────────────────────────────────
+// Single active integration (the CEO's calendar). On (re)connect we replace the
+// row. accessToken is cached until accessTokenExpiresAt, then refreshed via the
+// refreshToken.
+export const googleIntegration = pgTable("google_integration", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  email: text("email"),
+  refreshToken: text("refresh_token").notNull(),
+  accessToken: text("access_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", {
+    withTimezone: true,
+  }),
+  calendarId: text("calendar_id").notNull().default("primary"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({
   assignedTickets: many(tickets, { relationName: "assignee" }),
@@ -292,6 +316,7 @@ export type Comment = typeof comments.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
 export type AttachmentKind = "link" | "file";
+export type GoogleIntegration = typeof googleIntegration.$inferSelect;
 export type UserRole = "super_user" | "admin" | "team_member";
 export type TicketStatus =
   | "not_started"

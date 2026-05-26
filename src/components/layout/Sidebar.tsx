@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Folder,
   Star,
+  Settings,
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -68,6 +69,7 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
     { href: "/priority", label: "Priority", icon: Star },
     { href: "/team-board", label: "Team Tasks", icon: KanbanSquare },
     ...(isPrivileged ? [{ href: "/team", label: "Team", icon: Users }] : []),
+    ...(isPrivileged ? [{ href: "/settings", label: "Settings", icon: Settings }] : []),
   ];
   // No admin-only nav items currently (Notion sync logs removed).
   const admin: NavItem[] = [];

@@ -3,7 +3,25 @@
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
 Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
-**RESUME HERE → deploy #4 (notifications + SLA) per the steps below, then #5 (Google Calendar).**
+**RESUME HERE → deploy #4 (notifications/SLA) AND #5 phase-1 (Google Calendar) per steps below.**
+
+### 🆕 #5 GOOGLE CALENDAR — phase 1 (committed, NOT yet deployed)
+One-way sync: the CEO's active tasks **with a deadline** (assigned to OR created by the connected
+user) become events on their Google Calendar; create/update/status/delete on a task pushes the
+event (create / PATCH / delete). Raw `fetch` to Google OAuth + Calendar v3 (no SDK dep).
+- `src/lib/google.ts` — OAuth URL, code exchange, token refresh (cached in DB), event upsert/delete,
+  `syncTicketToGoogle` orchestrator (fire-and-forget from ticket actions; never throws).
+- Routes: `/api/google/connect` (super/admin → consent), `/api/google/callback` (store tokens →
+  `/settings?google=connected`), `/api/google/disconnect`.
+- `/settings` page (super/admin only) + sidebar "Settings" nav + `GoogleCalendarCard` (connect/
+  disconnect/status). Stores tokens in new `google_integration` table; event id on `tickets.google_event_id`.
+- Env (already added to droplet `.env.local`): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+  `GOOGLE_REDIRECT_URI=https://app.westindustriesintl.com/api/google/callback`.
+- ⚠️ Google OAuth app must be **Published (Production)** or refresh tokens expire after 7 days.
+**DEPLOY (droplet):** `git pull` → apply migration **as west_admin** `psql "$DATABASE_URL" -f
+drizzle/migrations/0008_public_goliath.sql` → `pnpm build` → `pm2 restart west-industries` →
+visit `/settings` → Connect Google Calendar → authorize. Then create/edit a CEO task with a
+deadline and confirm the event appears. Phase 2 (calendar→task pull) is a later follow-up.
 
 ### 🆕 #4 NOTIFICATIONS + SLA (committed, NOT yet deployed)
 Email notifications via Resend + an SLA reminder cron.
