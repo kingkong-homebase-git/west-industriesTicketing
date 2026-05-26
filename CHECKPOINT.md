@@ -5,22 +5,17 @@ Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views �
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
 **RESUME HERE → finish the PENDING UI POLISH below, then #4 (SLA/notifications — email, not yet started).**
 
-### ⚠️ PENDING UI POLISH (in-flight, NOT done — resume here)
-Last deployed UI commit = `bb12a67` (transparent header + 3px borders). User feedback still open:
-1. **Top bar color still doesn't match the board** in BOTH light and dark. Header + sidebar
-   brand were made `background: transparent` (commit `bb12a67`) but the top still reads a
-   different shade than the board area behind the cards. **Want:** the top bar to use the EXACT
-   same color as the rest of the board, per theme (light + dark). Likely fix: stop relying on
-   transparency/`var(--header)` and paint the header with the same effective color as the board
-   surface (define/verify a single token used by both, e.g. match `--background`/app-overlay
-   composite, or give header the same surface the cards sit on). Verify against screenshots in
-   both modes — currently header looks lighter (light) / slightly off (dark).
-2. **Header/top-bar corners are square/cut-off.** User wants the edges & corners rounded and
-   "fluent" like the task cards (cards use `rounded-2xl`/`rounded-xl`). "All need to be one" —
-   i.e. the header should feel like one continuous rounded surface with the board, not a
-   sharp-cornered strip. Round the relevant top container corners to match the card radius.
-Note: header bottom border is restored (`border-b border-border`); the logo area must stay
-borderless (no line under "Hemisphere"). Border width is currently 3px app-wide.
+### ✅ UI POLISH (DONE, committed — pending deploy + user eyeball)
+Resolved via the **one rounded panel** approach (commit below). Header + board are now wrapped
+in a single inset `rounded-2xl` panel in `AppShell` (`bg-background/90 backdrop-blur-md`, border
++ shadow, `overflow-hidden`). Because header and board share that one panel background, the
+top now matches the board by construction (fixes the light+dark colour mismatch — root cause was
+the transparent header showing the lighter top of the mountain bg). The page background
+(mountain) now shows in the inset margin around the panel. Sidebar right border removed to avoid
+clutter against the floating panel. Header stays transparent with its `border-b` divider; logo
+area still borderless. Borders 3px app-wide. **If the floating-panel look needs tuning** (panel
+opacity, inset size, or making the sidebar a matching floating panel too) that's the place to
+iterate.
 
 ✅ **#3 DEPLOYED & VERIFIED** — board view switcher (Kanban/Calendar/Timeline/Feed) on My
 Tasks, Project boards, and Team Board; choice persists in localStorage (`05e527d`, `a9e8eea`).

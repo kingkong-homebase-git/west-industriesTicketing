@@ -203,9 +203,9 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
         )}
       >
         <Brand showLabel={!collapsed} />
-        {/* Panel background + right divider live here (below the brand) so the
-            brand merges with the header instead of being walled off by a line. */}
-        <div className="flex-1 flex flex-col min-h-0 bg-surface/30 backdrop-blur-xl border-r border-border">
+        {/* Frosted panel background. No right border — the content panel now
+            floats inset with its own border, so a divider here just adds clutter. */}
+        <div className="flex-1 flex flex-col min-h-0 bg-surface/30 backdrop-blur-xl">
           <NavBody showLabel={!collapsed} />
           <div className="p-3 border-t border-border bg-surface-2/5">
             {!collapsed && (
