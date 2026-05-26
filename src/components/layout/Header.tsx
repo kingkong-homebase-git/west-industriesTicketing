@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import RoleBadge from "./RoleBadge";
-import { BrandLogo } from "@/components/brand/Logo";
+import { HemisphereMark } from "@/components/brand/Logo";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { LogOut, Menu } from "lucide-react";
 
@@ -24,9 +24,9 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
         >
           <Menu size={20} />
         </button>
-        {/* Mobile only — on desktop the sidebar shows the brand, so this would
-            be a duplicate sitting beside it. */}
-        <BrandLogo size={26} textClassName="text-base" className="md:hidden" />
+        {/* Mobile only — mark without the wordmark so it doesn't crowd the
+            theme toggle. On desktop the sidebar shows the full brand. */}
+        <HemisphereMark size={28} className="md:hidden" />
       </div>
 
       {/* User info */}
