@@ -3,7 +3,26 @@
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
 Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
-**RESUME HERE → finish the PENDING UI POLISH below, then #4 (SLA/notifications — email, not yet started).**
+**RESUME HERE → deploy #4 (notifications + SLA) per the steps below, then #5 (Google Calendar).**
+
+### 🆕 #4 NOTIFICATIONS + SLA (committed, NOT yet deployed)
+Email notifications via Resend + an SLA reminder cron.
+- **Assignment email** — on create/reassign, the assignee (≠ the actor) gets emailed.
+- **Urgent email** — on creating a task in the Urgent&Important quadrant, ALL active members
+  (except the creator) are emailed.
+- **SLA reminder** — `scripts/sla-reminders.ts` emails the assignee + admins/super_users for
+  active tasks due within 24h, once each (`tickets.notified_sla` flag; re-armed when the
+  deadline changes). Runs via new PM2 worker `west-industries-sla` (tsx, `cron_restart 0 */3 * * *`).
+- Also fixed a latent bug: `updateTicket` was wiping the deadline on any partial edit (e.g.
+  changing status) — now it only touches the deadline when one is actually sent.
+- Email env is now read at call time (lazy) so the standalone cron script picks up `.env.local`.
+**DEPLOY STEPS (droplet):**
+  1. `/root/backup-db.sh` then `git pull`.
+  2. Apply migration **as west_admin**: `set -a; . ./.env.local; set +a; psql "$DATABASE_URL" -f drizzle/migrations/0007_parched_metal_master.sql`
+  3. `pnpm install` (tsx/dotenv devDeps must be present for the worker), `pnpm build`, `pm2 restart west-industries`.
+  4. Start the cron worker ONCE: `pm2 start ecosystem.config.js --only west-industries-sla --env production` then `pm2 save`.
+  5. Verify: `pm2 list` shows `west-industries-sla` (will sit "stopped" between cron ticks — that's normal). Test by creating an Urgent&Important task / assigning a task and checking email.
+  Note: Resend is the personal account; sending to arbitrary addresses needs the verified domain (it is verified). Watch send volume since urgent alerts go to all members.
 
 ### ✅ UI POLISH (DONE, committed — pending deploy + user eyeball)
 Resolved via the **one rounded panel** approach (commit below). Header + board are now wrapped

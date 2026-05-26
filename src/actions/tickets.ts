@@ -11,6 +11,7 @@ import {
 import { eq, asc } from "drizzle-orm";
 import { requireAnyRole, isPrivilegedRole } from "@/lib/require-role";
 import { assertTicketAccess } from "@/lib/ticket-access";
+import { notifyTaskAssigned, notifyUrgentTaskCreated } from "@/lib/notifications";
 import {
   CreateTicketSchema,
   UpdateTicketSchema,
@@ -117,7 +118,7 @@ export async function getTicketDetail(id: string) {
 
 // ─── Create ticket ────────────────────────────────────────────────────────────
 export async function createTicket(data: unknown) {
-  const { userId, role } = await requireAnyRole();
+  const { userId, role, name } = await requireAnyRole();
   const parsed = CreateTicketSchema.parse(data);
 
   // Team members can only create tickets assigned to themselves; privileged
@@ -136,33 +137,83 @@ export async function createTicket(data: unknown) {
     })
     .returning();
 
+  // Fire-and-forget notifications — never block/fail ticket creation on email.
+  if (assigneeId && assigneeId !== userId) {
+    void notifyTaskAssigned({
+      assigneeId,
+      taskTitle: ticket.title,
+      assignedByName: name,
+    }).catch((e) => console.error("[notify] assigned:", e));
+  }
+  if (ticket.quadrant === "urgent_important") {
+    void notifyUrgentTaskCreated({
+      taskTitle: ticket.title,
+      creatorId: userId,
+      creatorName: name,
+    }).catch((e) => console.error("[notify] urgent:", e));
+  }
+
   revalidatePath("/tasks");
   revalidatePath("/team-board");
+  revalidatePath("/priority");
   return ticket;
 }
 
 // ─── Update ticket ────────────────────────────────────────────────────────────
 export async function updateTicket(id: string, data: unknown) {
-  const { userId, role } = await requireAnyRole();
+  const { userId, role, name } = await requireAnyRole();
   await assertTicketAccess(id, userId, role);
   const parsed = UpdateTicketSchema.parse(data);
 
+  // Capture the prior assignee so we can detect a (re)assignment.
+  const [prior] = await db
+    .select({ assigneeId: tickets.assigneeId })
+    .from(tickets)
+    .where(eq(tickets.id, id))
+    .limit(1);
+
   // Team members cannot reassign a ticket away from themselves.
   const { assigneeId, ...rest } = parsed;
-  const setValues = isPrivilegedRole(role) ? parsed : rest;
+  const setValues: Record<string, unknown> = {
+    ...(isPrivilegedRole(role) ? parsed : rest),
+  };
+  // Only touch the deadline when it was actually sent — otherwise a partial
+  // update like {title} would wipe an existing deadline.
+  delete setValues.deadline;
+
+  const updateValues: Record<string, unknown> = {
+    ...setValues,
+    updatedAt: new Date(),
+  };
+  if (parsed.deadline !== undefined) {
+    updateValues.deadline = parsed.deadline ? new Date(parsed.deadline) : null;
+    // Deadline changed → re-arm the SLA reminder.
+    updateValues.notifiedSla = false;
+  }
 
   const [ticket] = await db
     .update(tickets)
-    .set({
-      ...setValues,
-      deadline: parsed.deadline ? new Date(parsed.deadline) : null,
-      updatedAt: new Date(),
-    })
+    .set(updateValues)
     .where(eq(tickets.id, id))
     .returning();
 
+  // Notify on (re)assignment to a different person (privileged-only path).
+  if (
+    isPrivilegedRole(role) &&
+    assigneeId &&
+    assigneeId !== prior?.assigneeId &&
+    assigneeId !== userId
+  ) {
+    void notifyTaskAssigned({
+      assigneeId,
+      taskTitle: ticket.title,
+      assignedByName: name,
+    }).catch((e) => console.error("[notify] assigned:", e));
+  }
+
   revalidatePath("/tasks");
   revalidatePath("/team-board");
+  revalidatePath("/priority");
   return ticket;
 }
 

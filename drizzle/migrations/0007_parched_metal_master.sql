@@ -1,0 +1,1 @@
+ALTER TABLE "tickets" ADD COLUMN "notified_sla" boolean DEFAULT false NOT NULL;

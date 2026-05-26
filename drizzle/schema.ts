@@ -84,6 +84,9 @@ export const tickets = pgTable(
     status: ticketStatusEnum("status").notNull().default("not_started"),
     priority: ticketPriorityEnum("priority").notNull().default("medium"),
     quadrant: taskQuadrantEnum("quadrant"),
+    // True once an SLA "due soon" reminder email has been sent; reset when the
+    // deadline changes so a new reminder can fire.
+    notifiedSla: boolean("notified_sla").notNull().default(false),
     assigneeId: uuid("assignee_id").references(() => users.id, {
       onDelete: "set null",
     }),

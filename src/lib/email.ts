@@ -13,14 +13,18 @@ export interface SendEmailResult {
   error?: string;
 }
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Env is read at call time (not module load) so standalone scripts (e.g. the
+// SLA cron) that load .env.local after import still get the key.
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY;
+  return key ? new Resend(key) : null;
+}
 // Resend requires a verified domain to send to arbitrary recipients. Without
 // one, use "onboarding@resend.dev" (Resend's shared sender) which can only
 // deliver to your own account email — fine for testing.
-const EMAIL_FROM =
-  process.env.EMAIL_FROM || "Hemisphere <onboarding@resend.dev>";
-
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+function getEmailFrom(): string {
+  return process.env.EMAIL_FROM || "Hemisphere <onboarding@resend.dev>";
+}
 
 function buildInviteHtml({
   inviteeName,
@@ -239,6 +243,7 @@ export async function sendPasswordResetEmail(
   console.log(`🔑 RESET LINK: ${resetLink}`);
   console.log("========================================================\n");
 
+  const resend = getResend();
   if (!resend) {
     console.log("ℹ️ RESEND_API_KEY not set — reset email not sent. Link logged above.");
     return { delivered: false, error: "resend_api_key_missing" };
@@ -246,7 +251,7 @@ export async function sendPasswordResetEmail(
 
   try {
     const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
+      from: getEmailFrom(),
       to: toEmail,
       subject: "Reset your Hemisphere password",
       html: buildResetHtml(params),
@@ -282,6 +287,7 @@ export async function sendInviteEmail(
   if (personalMessage) console.log(`💬 MESSAGE: "${personalMessage}"`);
   console.log("========================================================\n");
 
+  const resend = getResend();
   if (!resend) {
     console.log(
       "ℹ️ RESEND_API_KEY not set — email not sent. Invite link logged above."
@@ -291,7 +297,7 @@ export async function sendInviteEmail(
 
   try {
     const { error } = await resend.emails.send({
-      from: EMAIL_FROM,
+      from: getEmailFrom(),
       to: toEmail,
       subject: "You've been invited to join Hemisphere",
       html: buildInviteHtml(params),
@@ -306,6 +312,104 @@ export async function sendInviteEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[email] Failed to send invite email:", message);
+    return { delivered: false, error: message };
+  }
+}
+
+// ─── Task notifications (assignment / urgent / SLA reminders) ─────────────────
+export interface TaskEmailParams {
+  toEmail: string;
+  recipientName?: string | null;
+  subject: string;
+  heading: string;
+  intro: string;
+  taskTitle: string;
+  taskMeta?: string | null;
+  ctaUrl: string;
+  ctaLabel?: string;
+  accent?: string; // bar/title accent colour
+}
+
+function buildTaskEmailHtml(p: TaskEmailParams): string {
+  const accent = p.accent || "#f97316";
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${p.subject}</title></head>
+      <body style="margin:0;padding:0;background:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <div style="background:#0b0f19;padding:40px 0;">
+          <div style="max-width:580px;margin:0 auto;background:rgba(17,24,39,0.6);border:1px solid rgba(249,115,22,0.25);border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <div style="padding:32px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:center;background:rgba(14,19,32,0.8);">
+              <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.025em;">Hemi<span style="color:#f97316;">sphere</span></div>
+            </div>
+            <div style="padding:40px 32px;">
+              <h1 style="font-size:22px;font-weight:700;margin:0 0 16px;color:#fff;">${p.heading}</h1>
+              <p style="font-size:15px;line-height:24px;color:#9ca3af;margin:0 0 20px;">${p.recipientName ? `Hello ${p.recipientName},` : "Hello,"}</p>
+              <p style="font-size:15px;line-height:24px;color:#9ca3af;margin:0 0 20px;">${p.intro}</p>
+              <div style="background:rgba(255,255,255,0.03);border-left:3px solid ${accent};border-radius:4px;padding:16px;margin:24px 0;">
+                <div style="font-size:16px;font-weight:600;color:#fff;">${p.taskTitle}</div>
+                ${p.taskMeta ? `<div style="font-size:13px;color:#9ca3af;margin-top:6px;">${p.taskMeta}</div>` : ""}
+              </div>
+              <div style="text-align:center;margin:32px 0;">
+                <a href="${p.ctaUrl}" style="display:inline-block;background:#f97316;color:#fff;font-weight:600;font-size:15px;padding:14px 32px;text-decoration:none;border-radius:8px;box-shadow:0 4px 14px rgba(249,115,22,0.4);" target="_blank">${p.ctaLabel || "Open Hemisphere"}</a>
+              </div>
+            </div>
+            <div style="padding:24px 32px;background:rgba(14,19,32,0.8);border-top:1px solid rgba(255,255,255,0.05);text-align:center;font-size:12px;color:#4b5563;">
+              You're receiving this because you're a member of the Hemisphere workspace.
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+function buildTaskEmailText(p: TaskEmailParams): string {
+  return [
+    p.recipientName ? `Hello ${p.recipientName},` : "Hello,",
+    "",
+    p.intro,
+    "",
+    `Task: ${p.taskTitle}`,
+    p.taskMeta ? p.taskMeta : "",
+    "",
+    `${p.ctaLabel || "Open Hemisphere"}: ${p.ctaUrl}`,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+}
+
+/**
+ * Sends a task-related notification (assignment / urgent / SLA). Never throws —
+ * returns a delivery result and logs to the console as a fallback.
+ */
+export async function sendTaskNotificationEmail(
+  params: TaskEmailParams
+): Promise<SendEmailResult> {
+  console.log(`✉️ [task-email] "${params.subject}" -> ${params.toEmail}`);
+
+  const resend = getResend();
+  if (!resend) {
+    console.log("ℹ️ RESEND_API_KEY not set — task email not sent.");
+    return { delivered: false, error: "resend_api_key_missing" };
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: getEmailFrom(),
+      to: params.toEmail,
+      subject: params.subject,
+      html: buildTaskEmailHtml(params),
+      text: buildTaskEmailText(params),
+    });
+    if (error) {
+      console.error("[email] Resend returned an error:", error);
+      return { delivered: false, error: error.message };
+    }
+    return { delivered: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[email] Failed to send task email:", message);
     return { delivered: false, error: message };
   }
 }

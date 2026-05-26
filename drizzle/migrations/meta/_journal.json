@@ -50,6 +50,13 @@
       "when": 1779723385560,
       "tag": "0006_high_masked_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779800282645,
+      "tag": "0007_parched_metal_master",
+      "breakpoints": true
     }
   ]
 }
