@@ -14,7 +14,7 @@ interface HeaderProps {
 
 export default function Header({ user, onMenuClick }: HeaderProps) {
   return (
-    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border shrink-0">
+    <header className="min-h-16 flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b border-border shrink-0">
       {/* Hamburger (mobile) + wordmark */}
       <div className="flex items-center gap-2.5">
         <button
