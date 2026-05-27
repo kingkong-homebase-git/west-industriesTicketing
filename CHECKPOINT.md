@@ -1,5 +1,19 @@
 # Checkpoint — 2026-05-21
 
+## 🖥️ LOCAL ENVIRONMENT (moved off OneDrive 2026-05-27)
+- **Repo path is now `C:\Users\ensli\Projects\TicketingsystemMarnus\app`** (was
+  `C:\Users\ensli\OneDrive\Desktop\TicketingsystemMarnus\app`). Use the new path for all commands.
+  Note: the Bash tool resets cwd to the OLD OneDrive path each call — always `cd` to the new path.
+- After the move, **`pnpm install` was re-run** to repair pnpm's symlinked `node_modules` (a plain
+  file-copy breaks the symlinks → hundreds of phantom TS "children/implicit any" errors). If you ever
+  see a flood of React/Radix/next-auth type errors locally, run `CI=true pnpm install` to fix it.
+- **GitHub auth fix:** pushes must use the **kingkong-homebase-git** account (kingkongdigital.org@gmail.com),
+  NOT "Slaapsak" (which lacked write → 403). The remote URL now embeds the username:
+  `https://kingkong-homebase-git@github.com/kingkong-homebase-git/west-industriesTicketing.git`, so GCM
+  authenticates as the right account. If a push 403s as Slaapsak again: remove the `git:https://github.com`
+  entry in Windows Credential Manager, then push and log in as kingkong-homebase-git.
+- Droplet unchanged: `/var/www/west-industries`, deploy via git pull → build → `pm2 restart`.
+
 ## 🚧 CURRENT BUILD PLAN (active) — major direction change
 Order: 0 remove Notion → 1 Projects → 6 copy → 2 Attachments → 3 Views → 4 Priorities/SLA/notifications → 5 CEO Google Calendar (last).
 Each migration: back up first, apply **as `west_admin`** (or `ALTER TABLE … OWNER TO west_admin`).
