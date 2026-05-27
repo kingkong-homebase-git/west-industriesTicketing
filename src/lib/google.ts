@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { googleIntegration, tickets } from "../../drizzle/schema";
+import { googleIntegration, tickets, projects } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -168,9 +168,10 @@ function buildEventBody(ticket: {
 }
 
 /**
- * One-way sync of a single task to the CEO's calendar. Creates/updates an event
- * for active tasks (assigned to or created by the connected user) that have a
- * deadline; deletes the event otherwise. Never throws — logs and returns.
+ * One-way sync of a single task to the connected (CEO) calendar. An event is
+ * created/updated for an active task with a deadline **only when** the task is
+ * in the "Subprime Kings" project OR flagged Urgent & Important; otherwise any
+ * existing event is removed. Never throws — logs and returns.
  */
 export async function syncTicketToGoogle(ticketId: string): Promise<void> {
   try {
@@ -180,11 +181,23 @@ export async function syncTicketToGoogle(ticketId: string): Promise<void> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId)).limit(1);
     if (!ticket) return;
 
-    const belongsToCeo =
-      auth.userId != null &&
-      (ticket.assigneeId === auth.userId || ticket.creatorId === auth.userId);
+    // Look up the project name for the Subprime Kings rule.
+    let projectName: string | null = null;
+    if (ticket.projectId) {
+      const [proj] = await db
+        .select({ name: projects.name })
+        .from(projects)
+        .where(eq(projects.id, ticket.projectId))
+        .limit(1);
+      projectName = proj?.name ?? null;
+    }
+    const isSubprimeKings = !!projectName && projectName.toLowerCase().includes("subprime");
+    const isUrgentImportant = ticket.quadrant === "urgent_important";
+
     const qualifies =
-      belongsToCeo && !!ticket.deadline && !CLOSED.has(ticket.status);
+      !!ticket.deadline &&
+      !CLOSED.has(ticket.status) &&
+      (isSubprimeKings || isUrgentImportant);
 
     const cal = encodeURIComponent(auth.calendarId);
     const headers = {

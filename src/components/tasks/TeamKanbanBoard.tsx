@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import TicketCard from "./TicketCard";
 import SlideOver from "./SlideOver";
+import NewTicketButton from "./NewTicketButton";
 import ViewSwitcher, { type BoardView } from "./ViewSwitcher";
 import CalendarView from "./CalendarView";
 import TimelineView from "./TimelineView";
@@ -18,10 +20,15 @@ interface TeamKanbanBoardProps {
 }
 
 export default function TeamKanbanBoard({ initialTickets, users, role, userId }: TeamKanbanBoardProps) {
+  const router = useRouter();
   const [tickets, setTickets] = useState(initialTickets);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [view, setView] = useState<BoardView>("kanban");
+
+  // Super users / admins can create tasks (and assign to anyone) from here.
+  const isPrivileged = role === "super_user" || role === "admin";
 
   // Sync state when props change
   useEffect(() => {
@@ -49,7 +56,21 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
 
   const openTicket = (id: string) => {
     setSelectedTicketId(id);
+    setIsCreateMode(false);
     setIsSlideOverOpen(true);
+  };
+
+  const openCreate = () => {
+    setSelectedTicketId(null);
+    setIsCreateMode(true);
+    setIsSlideOverOpen(true);
+  };
+
+  const closeSlideOver = () => {
+    setIsSlideOverOpen(false);
+    setSelectedTicketId(null);
+    setIsCreateMode(false);
+    router.refresh(); // pick up a newly created/edited task
   };
 
   const columns = [
@@ -142,14 +163,13 @@ export default function TeamKanbanBoard({ initialTickets, users, role, userId }:
       </div>
       )}
 
+      {isPrivileged && <NewTicketButton onClick={openCreate} />}
+
       <SlideOver
         isOpen={isSlideOverOpen}
-        onClose={() => {
-          setIsSlideOverOpen(false);
-          setSelectedTicketId(null);
-        }}
+        onClose={closeSlideOver}
         ticketId={selectedTicketId}
-        isCreateMode={false}
+        isCreateMode={isCreateMode}
         role={role}
         userId={userId}
       />
