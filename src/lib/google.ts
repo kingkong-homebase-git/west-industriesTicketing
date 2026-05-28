@@ -3,7 +3,10 @@ import { googleIntegration, tickets, projects } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const SCOPE = "https://www.googleapis.com/auth/calendar.events";
+// calendar.events to read/write events; userinfo.email so we can show which
+// account is connected.
+const SCOPE =
+  "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email";
 const OAUTH_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CAL_BASE = "https://www.googleapis.com/calendar/v3/calendars";
@@ -235,6 +238,51 @@ export async function syncTicketToGoogle(ticketId: string): Promise<void> {
     }
   } catch (err) {
     console.error("[google] syncTicketToGoogle error:", err);
+  }
+}
+
+/**
+ * Create a throwaway test event on the connected calendar to prove the
+ * connection works end-to-end. Returns a clear result for the UI (link on
+ * success, the Google error text on failure).
+ */
+export async function createTestCalendarEvent(): Promise<{
+  ok: boolean;
+  error?: string;
+  link?: string;
+}> {
+  const auth = await getValidAccessToken();
+  if (!auth) {
+    return { ok: false, error: "Not connected to Google Calendar." };
+  }
+  const cal = encodeURIComponent(auth.calendarId);
+  const start = new Date(Date.now() + 5 * 60 * 1000);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  const body = {
+    summary: "Hemisphere — test event (safe to delete)",
+    description: "If you can see this, Hemisphere → Google Calendar sync is working.",
+    start: { dateTime: start.toISOString() },
+    end: { dateTime: end.toISOString() },
+  };
+  try {
+    const res = await fetch(`${CAL_BASE}/${cal}/events`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: `Google API ${res.status}: ${(await res.text()).slice(0, 300)}`,
+      };
+    }
+    const ev = (await res.json()) as { htmlLink?: string };
+    return { ok: true, link: ev.htmlLink };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 

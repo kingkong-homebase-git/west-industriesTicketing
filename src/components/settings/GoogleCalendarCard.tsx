@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Check, Link2, Unlink } from "lucide-react";
+import { Calendar, Check, Link2, Unlink, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
+import { sendTestCalendarEvent } from "@/actions/google";
 
 interface GoogleCalendarCardProps {
   connected: boolean;
@@ -18,6 +19,23 @@ export default function GoogleCalendarCard({
 }: GoogleCalendarCardProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+
+  const handleTest = async () => {
+    setBusy(true);
+    try {
+      const res = await sendTestCalendarEvent();
+      if (res.ok) {
+        toast.success("Test event created on your calendar 🎉");
+        if (res.link) window.open(res.link, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error(res.error || "Test failed");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Test failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleDisconnect = async () => {
     setBusy(true);
@@ -59,14 +77,24 @@ export default function GoogleCalendarCard({
                   Connected{email ? ` as ${email}` : ""}.
                 </span>
               </div>
-              <button
-                onClick={handleDisconnect}
-                disabled={busy}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border text-sm text-text-secondary hover:text-danger hover:border-danger/50 transition-colors disabled:opacity-50"
-              >
-                <Unlink size={15} />
-                {busy ? "Disconnecting…" : "Disconnect"}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleTest}
+                  disabled={busy}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-accent/10 border border-accent/30 text-sm text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+                >
+                  <CalendarCheck size={15} />
+                  {busy ? "Working…" : "Send test event"}
+                </button>
+                <button
+                  onClick={handleDisconnect}
+                  disabled={busy}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border text-sm text-text-secondary hover:text-danger hover:border-danger/50 transition-colors disabled:opacity-50"
+                >
+                  <Unlink size={15} />
+                  {busy ? "…" : "Disconnect"}
+                </button>
+              </div>
             </div>
           ) : (
             <a
