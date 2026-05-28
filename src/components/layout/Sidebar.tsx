@@ -10,6 +10,7 @@ import {
   Folder,
   Star,
   CalendarDays,
+  Sparkles,
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -70,6 +71,7 @@ export default function Sidebar({ role, projects, collapsed, mobileOpen, onClose
     { href: "/team-board", label: "Team Tasks", icon: KanbanSquare },
     ...(isPrivileged ? [{ href: "/team", label: "Team", icon: Users }] : []),
     ...(isPrivileged ? [{ href: "/settings", label: "Jacques Calendar", icon: CalendarDays }] : []),
+    { href: "/whats-new", label: "What's New", icon: Sparkles },
   ];
   // No admin-only nav items currently (Notion sync logs removed).
   const admin: NavItem[] = [];
