@@ -1,12 +1,12 @@
 import { db } from "@/db";
-import { googleIntegration, tickets, projects } from "../../drizzle/schema";
+import { googleIntegration } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-// calendar.events to read/write events; userinfo.email so we can show which
-// account is connected.
+// Read-only calendar access (we only display the calendar, never write) +
+// userinfo.email so we can show which account is connected.
 const SCOPE =
-  "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email";
+  "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/userinfo.email";
 const OAUTH_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CAL_BASE = "https://www.googleapis.com/calendar/v3/calendars";
@@ -150,177 +150,81 @@ async function getValidAccessToken(): Promise<{ token: string; calendarId: strin
   return { token: data.access_token, calendarId: row.calendarId, userId: row.userId };
 }
 
-// ─── Calendar event sync ───────────────────────────────────────────────────────
-const CLOSED = new Set(["accomplished", "failed"]);
-
-function buildEventBody(ticket: {
+// ─── Calendar read (Jacques Calendar view) ──────────────────────────────────────
+export interface CalEvent {
+  id: string;
   title: string;
-  description: string | null;
-  deadline: Date | null;
-}) {
-  const start = ticket.deadline ? new Date(ticket.deadline) : new Date();
-  const end = new Date(start.getTime() + 30 * 60 * 1000); // 30-minute block
-  const appUrl = process.env.AUTH_URL ?? "https://app.westindustriesintl.com";
-  return {
-    summary: ticket.title,
-    description: `${ticket.description ? ticket.description + "\n\n" : ""}— via Hemisphere ${appUrl}/tasks`,
-    start: { dateTime: start.toISOString() },
-    end: { dateTime: end.toISOString() },
-    source: { title: "Hemisphere", url: `${appUrl}/tasks` },
-  };
+  start: string; // ISO
+  end: string; // ISO
+  allDay: boolean;
+  htmlLink: string | null;
+  location: string | null;
+}
+
+interface GoogleEventItem {
+  id?: string;
+  summary?: string;
+  status?: string;
+  htmlLink?: string;
+  location?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
 }
 
 /**
- * One-way sync of a single task to the connected (CEO) calendar. An event is
- * created/updated for an active task with a deadline **only when** the task is
- * in the "Subprime Kings" project OR flagged Urgent & Important; otherwise any
- * existing event is removed. Never throws — logs and returns.
+ * Read events from the connected (Jacques) primary calendar between two ISO
+ * timestamps. Read-only — never writes. Returns [] if not connected/on error.
  */
-export async function syncTicketToGoogle(ticketId: string): Promise<void> {
-  try {
-    const auth = await getValidAccessToken();
-    if (!auth) return; // not connected / refresh failed
-
-    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId)).limit(1);
-    if (!ticket) return;
-
-    // Look up the project name for the Subprime Kings rule.
-    let projectName: string | null = null;
-    if (ticket.projectId) {
-      const [proj] = await db
-        .select({ name: projects.name })
-        .from(projects)
-        .where(eq(projects.id, ticket.projectId))
-        .limit(1);
-      projectName = proj?.name ?? null;
-    }
-    const isSubprimeKings = !!projectName && projectName.toLowerCase().includes("subprime");
-    const isUrgentImportant = ticket.quadrant === "urgent_important";
-
-    const qualifies =
-      !!ticket.deadline &&
-      !CLOSED.has(ticket.status) &&
-      (isSubprimeKings || isUrgentImportant);
-
-    const cal = encodeURIComponent(auth.calendarId);
-    const headers = {
-      Authorization: `Bearer ${auth.token}`,
-      "Content-Type": "application/json",
-    };
-
-    if (qualifies) {
-      const body = buildEventBody(ticket);
-      if (ticket.googleEventId) {
-        // Update existing event.
-        const res = await fetch(
-          `${CAL_BASE}/${cal}/events/${encodeURIComponent(ticket.googleEventId)}`,
-          { method: "PATCH", headers, body: JSON.stringify(body) }
-        );
-        if (res.status === 404) {
-          // Event was deleted on Google — recreate.
-          await createEvent(cal, headers, body, ticketId);
-        } else if (!res.ok) {
-          console.error("[google] event update failed:", res.status, await res.text());
-        }
-      } else {
-        await createEvent(cal, headers, body, ticketId);
-      }
-    } else if (ticket.googleEventId) {
-      // No longer qualifies — remove the event.
-      const res = await fetch(
-        `${CAL_BASE}/${cal}/events/${encodeURIComponent(ticket.googleEventId)}`,
-        { method: "DELETE", headers }
-      );
-      if (!res.ok && res.status !== 404 && res.status !== 410) {
-        console.error("[google] event delete failed:", res.status, await res.text());
-      }
-      await db.update(tickets).set({ googleEventId: null }).where(eq(tickets.id, ticketId));
-    }
-  } catch (err) {
-    console.error("[google] syncTicketToGoogle error:", err);
-  }
-}
-
-/**
- * Create a throwaway test event on the connected calendar to prove the
- * connection works end-to-end. Returns a clear result for the UI (link on
- * success, the Google error text on failure).
- */
-export async function createTestCalendarEvent(): Promise<{
-  ok: boolean;
-  error?: string;
-  link?: string;
-}> {
+export async function listCalendarEvents(
+  timeMinISO: string,
+  timeMaxISO: string
+): Promise<{ ok: boolean; error?: string; events: CalEvent[] }> {
   const auth = await getValidAccessToken();
-  if (!auth) {
-    return { ok: false, error: "Not connected to Google Calendar." };
-  }
+  if (!auth) return { ok: false, error: "Not connected to Google Calendar.", events: [] };
+
   const cal = encodeURIComponent(auth.calendarId);
-  const start = new Date(Date.now() + 5 * 60 * 1000);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
-  const body = {
-    summary: "Hemisphere — test event (safe to delete)",
-    description: "If you can see this, Hemisphere → Google Calendar sync is working.",
-    start: { dateTime: start.toISOString() },
-    end: { dateTime: end.toISOString() },
-  };
+  const params = new URLSearchParams({
+    timeMin: timeMinISO,
+    timeMax: timeMaxISO,
+    singleEvents: "true", // expand recurring events
+    orderBy: "startTime",
+    maxResults: "2500",
+  });
+
   try {
-    const res = await fetch(`${CAL_BASE}/${cal}/events`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${auth.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+    const res = await fetch(`${CAL_BASE}/${cal}/events?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${auth.token}` },
     });
     if (!res.ok) {
       return {
         ok: false,
         error: `Google API ${res.status}: ${(await res.text()).slice(0, 300)}`,
+        events: [],
       };
     }
-    const ev = (await res.json()) as { htmlLink?: string };
-    return { ok: true, link: ev.htmlLink };
+    const data = (await res.json()) as { items?: GoogleEventItem[] };
+    const events: CalEvent[] = (data.items ?? [])
+      .filter((e) => e.status !== "cancelled" && (e.start?.dateTime || e.start?.date))
+      .map((e) => {
+        const allDay = !e.start?.dateTime;
+        const start = e.start?.dateTime ?? `${e.start?.date}T00:00:00`;
+        const end = e.end?.dateTime ?? `${e.end?.date ?? e.start?.date}T00:00:00`;
+        return {
+          id: e.id ?? start,
+          title: e.summary ?? "(no title)",
+          start,
+          end,
+          allDay,
+          htmlLink: e.htmlLink ?? null,
+          location: e.location ?? null,
+        };
+      });
+    return { ok: true, events };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
-  }
-}
-
-/** Delete a calendar event by id (used when a task is hard-deleted). Never throws. */
-export async function deleteCalendarEventById(eventId: string): Promise<void> {
-  try {
-    const auth = await getValidAccessToken();
-    if (!auth) return;
-    const cal = encodeURIComponent(auth.calendarId);
-    const res = await fetch(
-      `${CAL_BASE}/${cal}/events/${encodeURIComponent(eventId)}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${auth.token}` } }
-    );
-    if (!res.ok && res.status !== 404 && res.status !== 410) {
-      console.error("[google] delete-by-id failed:", res.status, await res.text());
-    }
-  } catch (err) {
-    console.error("[google] deleteCalendarEventById error:", err);
-  }
-}
-
-async function createEvent(
-  cal: string,
-  headers: Record<string, string>,
-  body: object,
-  ticketId: string
-): Promise<void> {
-  const res = await fetch(`${CAL_BASE}/${cal}/events`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    console.error("[google] event create failed:", res.status, await res.text());
-    return;
-  }
-  const event = (await res.json()) as { id?: string };
-  if (event.id) {
-    await db.update(tickets).set({ googleEventId: event.id }).where(eq(tickets.id, ticketId));
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      events: [],
+    };
   }
 }

@@ -1,10 +1,10 @@
 "use server";
 
 import { requireSuperUser } from "@/lib/require-role";
-import { createTestCalendarEvent } from "@/lib/google";
+import { listCalendarEvents } from "@/lib/google";
 
-// Super-user/admin only: create a test event to verify the calendar connection.
-export async function sendTestCalendarEvent() {
+// Super-user/admin only: read Jacques's calendar events for a date range.
+export async function getJacquesCalendarEvents(timeMinISO: string, timeMaxISO: string) {
   await requireSuperUser();
-  return createTestCalendarEvent();
+  return listCalendarEvents(timeMinISO, timeMaxISO);
 }

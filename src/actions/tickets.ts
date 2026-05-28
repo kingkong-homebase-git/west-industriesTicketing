@@ -12,7 +12,6 @@ import { eq, asc } from "drizzle-orm";
 import { requireAnyRole, isPrivilegedRole } from "@/lib/require-role";
 import { assertTicketAccess } from "@/lib/ticket-access";
 import { notifyTaskAssigned, notifyUrgentTaskCreated } from "@/lib/notifications";
-import { syncTicketToGoogle, deleteCalendarEventById } from "@/lib/google";
 import {
   CreateTicketSchema,
   UpdateTicketSchema,
@@ -154,9 +153,6 @@ export async function createTicket(data: unknown) {
     }).catch((e) => console.error("[notify] urgent:", e));
   }
 
-  // One-way Google Calendar sync (fire-and-forget; no-op if not connected).
-  void syncTicketToGoogle(ticket.id);
-
   revalidatePath("/tasks");
   revalidatePath("/team-board");
   revalidatePath("/priority");
@@ -215,8 +211,6 @@ export async function updateTicket(id: string, data: unknown) {
     }).catch((e) => console.error("[notify] assigned:", e));
   }
 
-  void syncTicketToGoogle(ticket.id);
-
   revalidatePath("/tasks");
   revalidatePath("/team-board");
   revalidatePath("/priority");
@@ -239,9 +233,6 @@ export async function updateTicketStatus(id: string, data: unknown) {
     .where(eq(tickets.id, id))
     .returning();
 
-  // Status change may close the task → sync (updates or removes the event).
-  void syncTicketToGoogle(ticket.id);
-
   revalidatePath("/tasks");
   revalidatePath("/team-board");
   revalidatePath("/priority");
@@ -253,18 +244,7 @@ export async function deleteTicket(id: string) {
   const { userId, role } = await requireAnyRole();
   await assertTicketAccess(id, userId, role);
 
-  // Grab the linked calendar event id before the row is gone.
-  const [existing] = await db
-    .select({ googleEventId: tickets.googleEventId })
-    .from(tickets)
-    .where(eq(tickets.id, id))
-    .limit(1);
-
   await db.delete(tickets).where(eq(tickets.id, id));
-
-  if (existing?.googleEventId) {
-    void deleteCalendarEventById(existing.googleEventId);
-  }
 
   revalidatePath("/tasks");
   revalidatePath("/team-board");
