@@ -78,6 +78,7 @@ export const ReorderChecklistSchema = z.object({
 export const AddCommentSchema = z.object({
   ticketId: z.string().uuid(),
   body: z.string().min(1).max(5000),
+  mentionedUserIds: z.array(z.string().uuid()).max(50).optional(),
 });
 
 // ─── Attachments ──────────────────────────────────────────────────────────────

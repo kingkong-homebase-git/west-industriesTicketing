@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { users } from "../../drizzle/schema";
-import { and, eq, ne } from "drizzle-orm";
+import { users, tickets } from "../../drizzle/schema";
+import { and, eq, ne, inArray } from "drizzle-orm";
 import { sendTaskNotificationEmail } from "@/lib/email";
 
 function appUrl(path = ""): string {
@@ -31,6 +31,46 @@ export async function notifyTaskAssigned(opts: {
     ctaUrl: appUrl("/tasks"),
     ctaLabel: "View my tasks",
   });
+}
+
+/** Email teammates who were @mentioned in a comment. */
+export async function notifyMentioned(opts: {
+  userIds: string[];
+  ticketId: string;
+  commenterName: string;
+  snippet: string;
+}): Promise<void> {
+  if (!opts.userIds.length) return;
+
+  const [task] = await db
+    .select({ title: tickets.title })
+    .from(tickets)
+    .where(eq(tickets.id, opts.ticketId))
+    .limit(1);
+  const title = task?.title ?? "a task";
+
+  const recipients = await db
+    .select({ name: users.name, email: users.email, isArchived: users.isArchived })
+    .from(users)
+    .where(inArray(users.id, opts.userIds));
+
+  await Promise.all(
+    recipients
+      .filter((r) => !!r.email && !r.isArchived)
+      .map((r) =>
+        sendTaskNotificationEmail({
+          toEmail: r.email,
+          recipientName: r.name,
+          subject: `💬 ${opts.commenterName} mentioned you`,
+          heading: "You were mentioned in a comment",
+          intro: `${opts.commenterName} mentioned you in a comment on a task:`,
+          taskTitle: title,
+          taskMeta: opts.snippet ? `“${opts.snippet}”` : undefined,
+          ctaUrl: appUrl("/tasks"),
+          ctaLabel: "View task",
+        })
+      )
+  );
 }
 
 /** Email every active member that an Urgent & Important task was created. */

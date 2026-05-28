@@ -183,6 +183,7 @@ export default function SlideOver({
                     <CommentsSection
                       ticketId={data.ticket.id}
                       initialComments={data.comments}
+                      users={data.allUsers || []}
                     />
                   </>
                 )}
