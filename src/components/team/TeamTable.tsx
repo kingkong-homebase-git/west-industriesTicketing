@@ -66,8 +66,25 @@ export default function TeamTable({ initialUsers, initialInvites }: TeamTablePro
 
   const handleResend = async (inviteId: string) => {
     try {
-      await resendInvite(inviteId);
-      toast.success("Invitation resent successfully.");
+      const res = await resendInvite(inviteId);
+      if (!res.ok) {
+        toast.error(res.error || "Failed to resend invitation.");
+        return;
+      }
+      if (res.emailDelivered) {
+        toast.success("Invitation resent successfully.");
+      } else {
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(res.inviteLink || "");
+          copied = true;
+        } catch {}
+        toast.warning(
+          copied
+            ? "Invitation resent, but email failed. The invite link has been copied to your clipboard."
+            : "Invitation resent, but email failed. Use 'Copy link' to copy the invite link."
+        );
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to resend invitation.");
     }

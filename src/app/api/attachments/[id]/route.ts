@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { attachments } from "../../../../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { assertTicketAccess } from "@/lib/ticket-access";
+import { getFileFromSpace } from "@/lib/spaces";
 
 export async function GET(
   _req: Request,
@@ -46,6 +47,27 @@ export async function GET(
     return Response.redirect(att.url, 302);
   }
 
+  // If stored in Spaces
+  if (att.kind === "file" && att.url) {
+    try {
+      const body = await getFileFromSpace(att.url);
+      const bytes = await (body as any).transformToByteArray();
+      const safeName = att.filename.replace(/["\\\r\n]/g, "_");
+      return new Response(bytes, {
+        status: 200,
+        headers: {
+          "Content-Type": att.mimeType || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${safeName}"`,
+          "Content-Length": String(bytes.byteLength),
+          "Cache-Control": "private, no-store",
+        },
+      });
+    } catch (e: any) {
+      console.error("Failed to fetch file from Spaces:", e);
+      return new Response("Failed to fetch attachment from storage", { status: 500 });
+    }
+  }
+
   if (!att.data) {
     return new Response("Not found", { status: 404 });
   }
@@ -62,3 +84,4 @@ export async function GET(
     },
   });
 }
+

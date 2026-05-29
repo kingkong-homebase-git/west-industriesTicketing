@@ -246,48 +246,57 @@ export async function inviteUser(data: unknown) {
 }
 
 export async function resendInvite(inviteId: string) {
-  const inviter = await requireSuperUser();
+  try {
+    const inviter = await requireSuperUser();
 
-  const [invite] = await db
-    .select()
-    .from(invites)
-    .where(eq(invites.id, inviteId))
-    .limit(1);
+    const [invite] = await db
+      .select()
+      .from(invites)
+      .where(eq(invites.id, inviteId))
+      .limit(1);
 
-  if (!invite) {
-    throw new Error("Invitation not found.");
+    if (!invite) {
+      return { ok: false as const, error: "Invitation not found." };
+    }
+
+    if (invite.isAccepted) {
+      return { ok: false as const, error: "This invitation has already been accepted." };
+    }
+
+    // Renew token and expiration
+    const newToken = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    await db
+      .update(invites)
+      .set({
+        token: newToken,
+        expiresAt,
+        createdAt: new Date(),
+      })
+      .where(eq(invites.id, inviteId));
+
+    const appUrl = process.env.AUTH_URL || "http://localhost:3000";
+    const inviteLink = `${appUrl}/accept-invite?token=${newToken}`;
+
+    const emailResult = await sendInviteEmail({
+      toEmail: invite.email,
+      inviteeName: invite.name,
+      inviterName: inviter.name || "Administrator",
+      inviteLink,
+      personalMessage: invite.message,
+    });
+
+    revalidatePath("/team");
+    return {
+      ok: true as const,
+      success: true,
+      emailDelivered: emailResult.delivered,
+      inviteLink,
+    };
+  } catch (err: any) {
+    return { ok: false as const, error: err.message || "Failed to resend invitation." };
   }
-
-  if (invite.isAccepted) {
-    throw new Error("This invitation has already been accepted.");
-  }
-
-  // Renew token and expiration
-  const newToken = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-
-  await db
-    .update(invites)
-    .set({
-      token: newToken,
-      expiresAt,
-      createdAt: new Date(),
-    })
-    .where(eq(invites.id, inviteId));
-
-  const appUrl = process.env.AUTH_URL || "http://localhost:3000";
-  const inviteLink = `${appUrl}/accept-invite?token=${newToken}`;
-
-  const emailResult = await sendInviteEmail({
-    toEmail: invite.email,
-    inviteeName: invite.name,
-    inviterName: inviter.name || "Administrator",
-    inviteLink,
-    personalMessage: invite.message,
-  });
-
-  revalidatePath("/team");
-  return { success: true, emailDelivered: emailResult.delivered, inviteLink };
 }
 
 export async function cancelInvite(inviteId: string) {
@@ -359,41 +368,45 @@ export async function validateInviteToken(token: string) {
 }
 
 export async function acceptInvite(data: unknown) {
-  const parsed = AcceptInviteSchema.parse(data);
+  try {
+    const parsed = AcceptInviteSchema.parse(data);
 
-  // 1. Validate the invite token
-  const validation = await validateInviteToken(parsed.token);
-  if (!validation.valid || !validation.invite) {
-    throw new Error(validation.reason || "Invalid invitation link.");
+    // 1. Validate the invite token
+    const validation = await validateInviteToken(parsed.token);
+    if (!validation.valid || !validation.invite) {
+      return { ok: false as const, error: validation.reason || "Invalid invitation link." };
+    }
+
+    const { invite } = validation;
+
+    // 2. Hash user's password
+    const passwordHash = await bcrypt.hash(parsed.password, 12);
+
+    // 3. Create the user in the database
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: invite.email.toLowerCase(),
+        name: invite.name,
+        passwordHash,
+        role: invite.role,
+      })
+      .returning({ id: users.id, email: users.email, name: users.name, role: users.role });
+
+    // 4. Mark invitation as accepted
+    await db
+      .update(invites)
+      .set({
+        isAccepted: true,
+        acceptedAt: new Date(),
+      })
+      .where(eq(invites.id, invite.id));
+
+    revalidatePath("/team");
+    return { ok: true as const, user: newUser };
+  } catch (err: any) {
+    return { ok: false as const, error: err.message || "Failed to accept invitation." };
   }
-
-  const { invite } = validation;
-
-  // 2. Hash user's password
-  const passwordHash = await bcrypt.hash(parsed.password, 12);
-
-  // 3. Create the user in the database
-  const [newUser] = await db
-    .insert(users)
-    .values({
-      email: invite.email.toLowerCase(),
-      name: invite.name,
-      passwordHash,
-      role: invite.role,
-    })
-    .returning({ id: users.id, email: users.email, name: users.name, role: users.role });
-
-  // 4. Mark invitation as accepted
-  await db
-    .update(invites)
-    .set({
-      isAccepted: true,
-      acceptedAt: new Date(),
-    })
-    .where(eq(invites.id, invite.id));
-
-  revalidatePath("/team");
-  return newUser;
 }
 
 // ─── Password reset ───────────────────────────────────────────────────────────

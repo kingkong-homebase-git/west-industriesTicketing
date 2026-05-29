@@ -78,10 +78,16 @@ function AcceptInviteContent() {
     setSubmitting(true);
     try {
       // 1. Accept invite and create account
-      await acceptInvite({
+      const res = await acceptInvite({
         token,
         password,
       });
+
+      if (!res.ok) {
+        toast.error(res.error || "Failed to set up account.");
+        setSubmitting(false);
+        return;
+      }
 
       toast.success("Account created successfully! Logging you in...");
 
