@@ -78,7 +78,7 @@ async function main() {
 
       if (DRY_RUN) {
         // Roll back the transaction so nothing is actually deleted
-        throw new sql.PostgresError("DRY_RUN_ROLLBACK");
+        throw new Error("DRY_RUN_ROLLBACK");
       }
     });
 
